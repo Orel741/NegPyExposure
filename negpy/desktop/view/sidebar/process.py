@@ -57,7 +57,7 @@ _LUMA_MARGIN_MAX = 1.0
 # _COLOR_CLIP_MIN (gentlest, near-extreme bounds) and _COLOR_CLIP_MAX (tightest balance).
 _COLOR_CLIP_NEUTRAL = float(EXPOSURE_CONSTANTS["base_color_clip"])
 _COLOR_CLIP_MIN = 1e-6
-_COLOR_CLIP_MAX = 5.0
+_COLOR_CLIP_MAX = 50.0
 
 # Mode bar: one film icon per mode, with the color carrying which one. Orange mask,
 # silver grey, slide blue.

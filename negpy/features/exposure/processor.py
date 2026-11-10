@@ -248,6 +248,7 @@ class PhotometricProcessor:
             grade_trims=(self.config.grade_trim_red, self.config.grade_trim_green, self.config.grade_trim_blue),
             shadow_point=context.metrics.get("shadow_point"),
             midtone_gamma=mg,
+            highlight_point=context.metrics.get("highlight_point"),
         )
         context.metrics["print_slopes"] = slopes
         hl_point = context.metrics.get("highlight_point")

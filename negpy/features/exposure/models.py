@@ -112,7 +112,7 @@ class ExposureConfig:
     auto_exposure: bool = True
     auto_normalize_contrast: bool = True
     render_intent: str = RenderIntent.PRINT
-    paper_profile: str = "neutral"
+    paper_profile: str = "scan"
     # Density-domain saturation, composed into the dye_mix kernel slot (see
     # papers.py: resolve_saturation_matrix). 1.0 = identity; trims are per-layer.
     dye_separation: float = 1.0
@@ -192,7 +192,7 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     "base_luma_clip": 0.01,
     # Neutral per-tail clip for per-channel balance (orange-mask cast removal),
     # independent of luma range. The slider spans percentiles around this.
-    "base_color_clip": 1.0,
+    "base_color_clip": 20.0,
     # Scan-exposure warning: linear level treated as sensor-white clipping. Film
     # base and scene shadows sit near sensor white, so clipped pixels collapse
     # distinct densities to D=0.
@@ -294,6 +294,11 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     "shadow_hold_strength": 0.40,
     "shadow_hold_overshoot": 0.15,
     "shadow_hold_max": 0.3,
+    # A scan profile's Auto levels: the code, as a fraction of the range, that the textured
+    # dark tail (shadow_reach_percentile) and bright tail (highlight_hold_percentile) print at.
+    # Outside 0 to 1 clips: the tail prints past black or white.
+    "scan_black_level": -0.05,
+    "scan_white_level": 1.15,
     # Preflash threshold: the density above paper white that the ISO R range starts at.
     "preflash_threshold_density": 0.04,
     # Flat / digital-intermediate master (RenderIntent.FLAT). A log-video master:

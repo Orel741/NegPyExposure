@@ -24,6 +24,7 @@ import numpy as np
 from negpy.features.exposure.models import EXPOSURE_CONSTANTS
 from negpy.features.exposure.print_lut import DyeLut, DyeMatrix, DyeMatrixRows, PrintColor, PrintLut, flat_matrix, load_print_lut
 from negpy.features.process.models import ProcessMode
+from negpy.kernel.image.logic import _WORKING_GAMMA
 
 DEFAULT_PROFILE_KEY = "neutral"
 
@@ -69,7 +70,8 @@ class PaperProfile:
     DyeMatrix coupling D_rgb = M · D_dye above base, or a DyeLut from dye density to color.
     lith_path — the paper's lith color path, read by the Lith stage.
     kind picks the process mode the paper shows in; medium is its group in the dropdown;
-    short names it on a paper test strip band.
+    short names it on a paper test strip band. scan prints a display code linear in density
+    (scan_gamma), and Auto places the frame by its levels (scan_levels).
     """
 
     label: str
@@ -89,12 +91,26 @@ class PaperProfile:
     base_tint_cmy: Tuple[float, float, float] = (0.0, 0.0, 0.0)
     print_color: PrintColor = DyeMatrix(_IDENTITY_DYE)
     lith_path: LithPath = _DEFAULT_LITH_PATH
+    scan: bool = False
 
 
 PAPER_PROFILES: Dict[str, PaperProfile] = {
     DEFAULT_PROFILE_KEY: PaperProfile(label="Digital (Adobe RGB)", short="Digital", kind="default", medium="digital"),
     # Digital's curve with a Pakon minilab's colors: the LUT is RGBScan.icc applied to Digital's print.
     "pakon": PaperProfile(label="Digital (Pakon)", short="Pakon", kind="ra4", medium="digital", print_color=DyeLut("pakon")),
+    # A scanner's rendering, not a paper's: the display code is linear in the negative's density.
+    # Hard knees clip the tails the levels place past the ends. The matrix is a Dye Separation
+    # of 1.4, a scanner's color strength.
+    "scan": PaperProfile(
+        label="Digital (Scan)",
+        short="Scan",
+        kind="ra4",
+        medium="digital",
+        toe_sharpness_base=14.0,
+        shoulder_sharpness_base=4.0,
+        print_color=DyeMatrix(((19 / 15, -2 / 15, -2 / 15), (-2 / 15, 19 / 15, -2 / 15), (-2 / 15, -2 / 15, 19 / 15))),
+        scan=True,
+    ),
     # A Frontier 350/370's file output, from its own tables, with a neutral gray axis. The curve shape is fitted to its
     # gray curve on the print density axis (543 codes per log E). slope_gain prints L* 90 to 10 over Digital's log E span
     # at the same Grade. The fit's equal-ISO-R gain (1.5) separates the layers so far that warm shadows block in two.
@@ -428,6 +444,12 @@ def effective_paper_profile(key: str, process_mode: str | None) -> PaperProfile:
     if process_mode is not None and _MODE_KIND.get(process_mode) == paper.kind:
         return paper
     return PAPER_PROFILES[DEFAULT_PROFILE_KEY]
+
+
+def scan_gamma(paper: PaperProfile | None) -> float:
+    """The scan transfer's exponent for the kernels: the working TRC's inverse, so the encoded
+    code is linear in print density. 0 for a paper."""
+    return _WORKING_GAMMA if paper is not None and paper.scan else 0.0
 
 
 def effective_constants(paper: PaperProfile | None) -> Dict[str, Any]:

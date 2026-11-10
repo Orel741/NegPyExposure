@@ -2137,6 +2137,7 @@ class GPUEngine:
             effective_paper_profile,
             resolve_print_color,
             resolve_saturation_matrix,
+            scan_gamma,
         )
 
         exp = printed_exposure(settings.process, settings.exposure)
@@ -2169,6 +2170,7 @@ class GPUEngine:
             grade_trims=(exp.grade_trim_red, exp.grade_trim_green, exp.grade_trim_blue),
             shadow_point=shadow_point,
             midtone_gamma=mg,
+            highlight_point=highlight_point,
         )
         hl_auto = (
             highlight_hold_offset(
@@ -2367,7 +2369,8 @@ class GPUEngine:
             + struct.pack("ffff", *channel_density_ranges(LogNegativeBounds(adj_floors, adj_ceils)), black_hold_taper(exp, paper))
             # Print-stock LUT: xyz = e_max (0 = no LUT), w = the black that BPC maps to 0.
             + struct.pack("ffff", *lut_row)
-            + struct.pack("ffff", *collapse_weights(settings.process, exp), 0.0)
+            # w = the scan transfer's exponent (0 = a paper); a LUT stock ignores it.
+            + struct.pack("ffff", *collapse_weights(settings.process, exp), scan_gamma(paper))
         )
 
         cls = float(settings.lab.clahe_strength)
