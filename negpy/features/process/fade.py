@@ -251,14 +251,17 @@ def neutral_axis_from_grid(grid: ImageBuffer) -> tuple[Optional[NeutralAxisRefs]
     """(refs, reason) from the transparency meter's prefiltered log grid, metered against this
     frame's own bounds: the fixed transfer window finds no grays in a faded slide. `refs` is None,
     with a reason, when no trustworthy neutral axis exists."""
-    refs = measure_neutral_axis_from_log(grid, _measured_slide_bounds(grid, COLOR_EXTREME_PCT), None, 0.0)
+    from negpy.features.exposure.models import EXPOSURE_CONSTANTS
+
+    band = EXPOSURE_CONSTANTS["neutral_axis_transfer_shadow_band"]
+    refs = measure_neutral_axis_from_log(grid, _measured_slide_bounds(grid, COLOR_EXTREME_PCT), None, 0.0, shadow_band=band)
     if refs is not None and refs[3] >= MIN_CONFIDENCE:
         return refs, ""
     # A faded slide's grays carry the fade's cast, which can put them in the foliage or sky
     # sector; the unfiltered set is the last try.
     bounds = _measured_slide_bounds(grid, ROBUST_EXTREME_PCT)
     for exclude in (True, False):
-        refs = measure_neutral_axis_from_log(grid, bounds, None, 0.0, exclude_subjects=exclude)
+        refs = measure_neutral_axis_from_log(grid, bounds, None, 0.0, exclude_subjects=exclude, shadow_band=band)
         if refs is not None and refs[3] >= ROBUST_MIN_CONFIDENCE:
             return refs, ""
     return None, tr("No reliable grays found on this frame.")

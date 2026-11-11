@@ -99,14 +99,14 @@ PAPER_PROFILES: Dict[str, PaperProfile] = {
     # Digital's curve with a Pakon minilab's colors: the LUT is RGBScan.icc applied to Digital's print.
     "pakon": PaperProfile(label="Digital (Pakon)", short="Pakon", kind="ra4", medium="digital", print_color=DyeLut("pakon")),
     # A scanner's rendering, not a paper's: the display code is linear in the negative's density.
-    # Hard knees clip the tails the levels place past the ends. The matrix is a Dye Separation
-    # of 1.4, a scanner's color strength.
+    # A soft black knee fades the tail the levels place past black, as a minilab scan does; a hard
+    # shoulder clips the highlight tail. The matrix is a Dye Separation of 1.4, a scanner's color strength.
     "scan": PaperProfile(
         label="Digital (Scan)",
         short="Scan",
         kind="ra4",
         medium="digital",
-        toe_sharpness_base=14.0,
+        toe_sharpness_base=7.0,
         shoulder_sharpness_base=4.0,
         print_color=DyeMatrix(((19 / 15, -2 / 15, -2 / 15), (-2 / 15, 19 / 15, -2 / 15), (-2 / 15, -2 / 15, 19 / 15))),
         scan=True,

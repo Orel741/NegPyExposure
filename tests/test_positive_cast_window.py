@@ -9,6 +9,7 @@ import numpy as np
 
 from negpy.domain.interfaces import PipelineContext
 from negpy.domain.models import WorkspaceConfig
+from negpy.features.exposure.models import EXPOSURE_CONSTANTS
 from negpy.features.exposure.logic import cast_solve_inputs, neutral_axis_affine
 from negpy.features.exposure.normalization import LogNegativeBounds, measure_neutral_axis_from_log, prefilter_log_grid
 from negpy.features.process.models import ProcessMode
@@ -17,6 +18,8 @@ from negpy.infrastructure.gpu.device import GPUDevice
 from negpy.services.rendering.engine import base_processor
 
 FIXED = LogNegativeBounds(*transfer_bounds())
+
+_BAND = EXPOSURE_CONSTANTS["neutral_axis_transfer_shadow_band"]
 
 
 def _wedge(lo: float, hi: float, seed: int = 3, cast=(1.0, 0.86, 0.74)) -> np.ndarray:
@@ -87,7 +90,9 @@ class TestPositiveAxisWindow(unittest.TestCase):
 
     def test_positive_off_meters_the_fixed_window_unchanged(self):
         img = _wedge(5e-4, 0.9)
-        expected = measure_neutral_axis_from_log(prefilter_log_grid(img, None, 0.05), FIXED, None, 0.0, exclude_subjects=False)
+        expected = measure_neutral_axis_from_log(
+            prefilter_log_grid(img, None, 0.05), FIXED, None, 0.0, exclude_subjects=False, shadow_band=_BAND
+        )
         self.assertIsNotNone(expected)
         self.assertEqual(_cpu_refs(img, positive=False), expected)
 
@@ -110,7 +115,9 @@ class TestPositiveAxisWindow(unittest.TestCase):
 
     def test_a_frame_with_an_axis_keeps_its_refs(self):
         grid = prefilter_log_grid(_dark_scan())
-        first = measure_neutral_axis_from_log(grid, LogNegativeBounds(*transfer_axis_bounds(grid, True)), None, 0.0, exclude_subjects=False)
+        first = measure_neutral_axis_from_log(
+            grid, LogNegativeBounds(*transfer_axis_bounds(grid, True)), None, 0.0, exclude_subjects=False, shadow_band=_BAND
+        )
         self.assertIsNotNone(first)
         self.assertEqual(measure_transfer_neutral_axis(grid, True), first)
 
@@ -118,7 +125,9 @@ class TestPositiveAxisWindow(unittest.TestCase):
         """The border pulls the window's dark end onto itself, so the first window finds no axis."""
         img = _bordered(_dark_scan())
         grid = prefilter_log_grid(img, None, 0.05)
-        first = measure_neutral_axis_from_log(grid, LogNegativeBounds(*transfer_axis_bounds(grid, True)), None, 0.0, exclude_subjects=False)
+        first = measure_neutral_axis_from_log(
+            grid, LogNegativeBounds(*transfer_axis_bounds(grid, True)), None, 0.0, exclude_subjects=False, shadow_band=_BAND
+        )
         self.assertIsNone(first)
         refs = _cpu_refs(img, positive=True)
         self.assertIsNotNone(refs)
