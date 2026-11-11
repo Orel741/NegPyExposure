@@ -96,8 +96,8 @@ class TestRebateTone(unittest.TestCase):
 
     def test_paper_black_lifts_the_rebate(self) -> None:
         m = _metrics(ProcessMode.C41)
-        bpc = rebate_tone(self._settings(paper_black=False), m)
-        dmax = rebate_tone(self._settings(paper_black=True), m)
+        bpc = rebate_tone(self._settings(paper_black=False, paper_profile="neutral"), m)
+        dmax = rebate_tone(self._settings(paper_black=True, paper_profile="neutral"), m)
         self.assertGreater(float(dmax[-1].mean()), float(bpc[-1].mean()))
 
     def test_no_print_model_falls_back_to_plain_light(self) -> None:

@@ -1062,7 +1062,7 @@
   "Finishing": "仕上げ",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "ラボのスキャナーのような仕上げです。<b>クロマ</b>は色の強さ、<b>シャープネス</b>は細部の鮮明さを決め、<b>グロー</b>と<b>ハレーション</b>は明るい部分の周りに柔らかな光や赤い光を加えます。",
   "First file": "最初のファイル",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "暗室でプリントする人と同じように、まず印画紙を選びます。実在の印画紙はそれぞれ独自のコントラストと色を持ちます。既定の<b>デジタル (Adobe RGB)</b> は理想的な印画紙です。",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "暗室でプリントする人と同じように、まず印画紙を選びます。実在の印画紙はそれぞれ独自のコントラストと色を持ちます。既定の<b>デジタル (Scan)</b> はフィルムスキャナーのように描写します。",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "指定したチャートに行列をフィットし、実測プロファイルとして保存します。",
   "Fit to Window": "ウィンドウに合わせる",
   "Fit to window": "ウィンドウに合わせる",

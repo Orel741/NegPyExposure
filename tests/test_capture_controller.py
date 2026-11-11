@@ -130,7 +130,7 @@ def test_a_capture_sets_the_frames_decode_for_its_light():
 
 
 def test_a_capture_sets_the_frames_print_stock_by_the_setup_rule():
-    # Narrowband light prints on Pakon, white light on neutral, only over a stock the Setup rule itself picks.
+    # Narrowband light prints on Pakon, white light on scan, only over a stock the Setup rule itself picks.
     c = _run(["r.ARW", "g.ARW", "b.ARW"], rgb_mode=True, white_mode=False)
     _hydrate_and_load(c, "r.ARW", ProcessMode.C41)
     assert c.state.config.exposure.paper_profile == "pakon"
@@ -138,7 +138,7 @@ def test_a_capture_sets_the_frames_print_stock_by_the_setup_rule():
     c = _run(["neg.ARW"], rgb_mode=True, white_mode=True, white_process_mode=ProcessMode.C41)
     c.state.config = replace(c.state.config, exposure=replace(c.state.config.exposure, paper_profile="pakon"))
     _hydrate_and_load(c, "neg.ARW", ProcessMode.C41)
-    assert c.state.config.exposure.paper_profile == "neutral"
+    assert c.state.config.exposure.paper_profile == "scan"
 
     c = _run(["r.ARW", "g.ARW", "b.ARW"], rgb_mode=True, white_mode=False)
     c.state.config = replace(c.state.config, exposure=replace(c.state.config.exposure, paper_profile="ilford_mg"))

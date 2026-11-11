@@ -2322,7 +2322,7 @@ class AppController(QObject):
         # After the open frame's persist, which rewrites the new-file snapshot from that frame.
         sticky = self.session.repo.get_global_setting(STICKY_CONFIG_KEY)
         sticky = dict(sticky) if isinstance(sticky, dict) else {}
-        if sticky.get("paper_profile", "neutral") in SCAN_SETUP_PAPERS:
+        if sticky.get("paper_profile", "scan") in SCAN_SETUP_PAPERS:
             self.session.repo.save_global_setting(STICKY_CONFIG_KEY, {**sticky, "paper_profile": paper})
 
         count = 0

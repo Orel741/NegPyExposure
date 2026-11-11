@@ -176,6 +176,20 @@ class TestExposureParity:
     def test_default_config(self):
         self._run_and_compare(_make_base_settings())
 
+    def test_digital_stock(self):
+        base = _make_base_settings()
+        self._run_and_compare(replace(base, exposure=replace(base.exposure, paper_profile="neutral")))
+
+    def test_scan_stock_with_trims(self):
+        base = _make_base_settings()
+        exposure = replace(base.exposure, paper_profile="scan", grade=95.0, density=1.2, toe=0.4, shoulder=0.3, dye_separation=1.2)
+        self._run_and_compare(replace(base, exposure=exposure))
+
+    def test_scan_stock_without_auto(self):
+        base = _make_base_settings()
+        exposure = replace(base.exposure, paper_profile="scan", auto_exposure=False, auto_normalize_contrast=False)
+        self._run_and_compare(replace(base, exposure=exposure))
+
     def _lut_stock(self, tmp_path, monkeypatch, key, tilt):
         g = np.linspace(0.0, 3.0, 17)
         c, m, y = np.meshgrid(g, g, g, indexing="ij")
@@ -560,7 +574,13 @@ class TestLabParity:
             img[(i // 4) * 32 : (i // 4) * 32 + 32, (i % 4) * 16 : (i % 4) * 16 + 16] = col
         img = np.ascontiguousarray(img)
 
-        s = replace(_make_base_settings(), lab=LabConfig(saturation=1.0, skin_protection=0.8, sharpen=0.0))
+        base = _make_base_settings()
+        s = replace(
+            base,
+            lab=LabConfig(saturation=1.0, skin_protection=0.8, sharpen=0.0),
+            exposure=replace(base.exposure, paper_profile="neutral"),
+            process=replace(base.process, color_range_clip=1.0),
+        )
         scale = max(h, w) / 1024.0
 
         cpu_result = self.cpu.process(img, s, "parity_test_skin_rein")

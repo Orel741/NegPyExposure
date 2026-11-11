@@ -37,7 +37,7 @@ def _curved_negative() -> np.ndarray:
 
 def _metrics_and_config():
     cfg = WorkspaceConfig()
-    process = replace(cfg.process, analysis_buffer=0.0)
+    process = replace(cfg.process, analysis_buffer=0.0, color_range_clip=1.0)
     exposure = replace(cfg.exposure, cast_removal_strength=0.8)
     ctx = PipelineContext(scale_factor=1.0, original_size=(_H, _W), process_mode=ProcessMode.C41)
     norm = NormalizationProcessor(process).process(_curved_negative(), ctx)

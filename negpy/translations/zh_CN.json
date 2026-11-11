@@ -1062,7 +1062,7 @@
   "Finishing": "修饰",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "像冲印扫描仪一样做最后处理。<b>色度</b>设置色彩浓度，<b>锐化</b>锐化细节，<b>辉光</b>和<b>光晕</b>在亮部周围加上柔和或红色的光晕。",
   "First file": "第一个文件",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "像暗房印相师一样，先选相纸。每种真实相纸都有自己的反差和颜色。默认的<b>数字 (Adobe RGB)</b> 是理想相纸。",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "像暗房印相师一样，先选相纸。每种真实相纸都有自己的反差和颜色。默认的<b>数字 (Scan)</b> 呈现胶片扫描仪那样的效果。",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "将矩阵拟合到标记的色卡，并保存为实测配置。",
   "Fit to Window": "适合窗口",
   "Fit to window": "适合窗口",

@@ -370,7 +370,10 @@ def resolve_print_color(paper: PaperProfile | None) -> Tuple[Optional[np.ndarray
 
 def resolve_flat_matrix(paper: PaperProfile | None) -> Optional[np.ndarray]:
     """The stock's color as the Flat master's density 3×3: a matrix stock's own rows, a LUT stock's
-    stand-in (`flat_matrix`). None for identity, so the Digital flat master stays byte-exact."""
+    stand-in (`flat_matrix`). None for identity, so the Digital flat master stays byte-exact; a
+    scan profile's matrix is its look, which a flat master leaves out."""
+    if paper is not None and paper.scan:
+        return None
     color = None if paper is None else paper.print_color
     if isinstance(color, DyeLut):
         return flat_matrix(color.key)

@@ -71,7 +71,8 @@ def _base_settings() -> WorkspaceConfig:
     return replace(
         WorkspaceConfig(),
         geometry=geo,
-        process=replace(ProcessConfig(), white_point_offset=0.0, black_point_offset=0.0),
+        process=replace(ProcessConfig(), white_point_offset=0.0, black_point_offset=0.0, color_range_clip=1.0),
+        exposure=replace(WorkspaceConfig().exposure, paper_profile="neutral"),
     )
 
 
@@ -79,8 +80,8 @@ def test_full_engine_output_preserved_after_relocation():
     base = _base_settings()
     configs = {
         "default": base,
-        "expo_dark": replace(base, exposure=ExposureConfig(density=-1.0, grade=2.0)),
-        "expo_cmy": replace(base, exposure=ExposureConfig(wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5)),
+        "expo_dark": replace(base, exposure=ExposureConfig(density=-1.0, grade=2.0, paper_profile="neutral")),
+        "expo_cmy": replace(base, exposure=ExposureConfig(wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5, paper_profile="neutral")),
     }
     img = _synthetic_image()
     eng = DarkroomEngine()

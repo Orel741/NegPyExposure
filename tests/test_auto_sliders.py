@@ -78,7 +78,7 @@ def test_shown_values_are_what_prints_at_a_retuned_target(shadow_point):
 
 
 def test_shown_values_follow_the_meter():
-    exposure = ExposureConfig()
+    exposure = ExposureConfig(paper_profile="neutral")
     dense = print_shown_values(exposure, MODE, _metrics(metered_anchor=0.56))
     thin = print_shown_values(exposure, MODE, _metrics(metered_anchor=0.40))
     assert dense["density"] != thin["density"]

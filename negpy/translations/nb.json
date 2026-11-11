@@ -1062,7 +1062,7 @@
   "Finishing": "Etterbehandling",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "Etterbehandling slik en laboratorieskanner gjør det. <b>Kroma</b> angir fargestyrken, <b>Skarphet</b> gjør detaljer skarpere, og <b>Glød</b> og <b>Halasjon</b> legger til en myk eller en rød glød rundt lyse områder.",
   "First file": "Første fil",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "Velg først papiret, slik en mørkeromskopist gjør. Hvert ekte papir har sin egen kontrast og sine egne farger. <b>Digital (Adobe RGB)</b>, standarden, er et ideelt papir.",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "Velg først papiret, slik en mørkeromskopist gjør. Hvert ekte papir har sin egen kontrast og sine egne farger. <b>Digital (Scan)</b>, standarden, gjengir bildet slik en filmskanner gjør.",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "Tilpass matrisen til det merkede kartet og lagre den som en målt profil.",
   "Fit to Window": "Tilpass til vinduet",
   "Fit to window": "Tilpass til vinduet",

@@ -117,6 +117,7 @@ class CharacteristicCurve:
         self.shadow_grade_delta = float(shadow_grade_delta)
         self.highlight_grade_delta = float(highlight_grade_delta)
         self.d_max = float(c["d_max"])
+        self.scan_gamma = scan_gamma(paper)
         # The BPC reference mirrors the kernel prologue: achromatic, d_min for the tint.
         self.bpc = bool(bpc)
         db = self.d_max
@@ -165,6 +166,11 @@ class CharacteristicCurve:
             v = v + self.shadow_density * w_zsh + self.highlight_density * w_zhi
         v1 = self.d_min_eff + np.logaddexp(0.0, self.a_hl * (v - self.d_min_eff)) / self.a_hl
         res = self.d_max_eff - np.logaddexp(0.0, self.a_sh * (self.d_max_eff - v1)) / self.a_sh
+
+        if self.scan_gamma > 0.0:
+            # The density a paper would need for the scan transfer's code.
+            z = np.clip((self.d_max - res) / self.d_max, 0.0, 1.0)
+            return ensure_image(-self.scan_gamma * np.log10(np.maximum(z, 1e-12)))
 
         if self.bpc:
             t = 10.0 ** (-res)

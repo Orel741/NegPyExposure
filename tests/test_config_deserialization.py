@@ -41,7 +41,7 @@ class TestConfigDeserialization(unittest.TestCase):
             {"process_mode": "Transparency"},
         ):
             config = WorkspaceConfig.from_flat_dict({"narrowband_scan": True, **kept})
-            self.assertEqual(config.exposure.paper_profile, kept.get("paper_profile", "neutral"), kept)
+            self.assertEqual(config.exposure.paper_profile, kept.get("paper_profile", "scan"), kept)
 
     def test_unknown_keys_warning(self):
         data = {

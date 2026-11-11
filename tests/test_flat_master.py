@@ -176,7 +176,9 @@ class TestFlatStockMatrix(unittest.TestCase):
 
         for key, paper in PAPER_PROFILES.items():
             m = resolve_flat_matrix(paper)
-            if isinstance(paper.print_color, DyeLut):
+            if paper.scan:
+                self.assertIsNone(m, key)
+            elif isinstance(paper.print_color, DyeLut):
                 self.assertIsNotNone(m, key)
             else:
                 dye, _ = resolve_print_color(paper)

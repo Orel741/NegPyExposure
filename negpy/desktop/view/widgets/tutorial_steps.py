@@ -264,7 +264,7 @@ def build(window: "MainWindow") -> list[TutorialStep]:
             tr("Print Stock"),
             tr(
                 "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. "
-                "<b>Digital (Adobe RGB)</b>, the default, is an ideal paper."
+                "<b>Digital (Scan)</b>, the default, renders as a film scanner does."
             ),
             lambda w: cp(w).paper_section,
             focus=lambda w: cp(w).paper_sidebar.paper_combo,

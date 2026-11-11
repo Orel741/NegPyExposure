@@ -1062,7 +1062,7 @@
   "Finishing": "Hoàn thiện",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "Hoàn thiện như máy quét phòng lab. <b>Sắc độ</b> đặt cường độ màu, <b>Làm nét</b> làm nét chi tiết, còn <b>Phát sáng</b> và <b>Quầng sáng</b> thêm quầng mềm hoặc quầng đỏ quanh vùng sáng.",
   "First file": "Tệp đầu tiên",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "Trước tiên hãy chọn giấy, như thợ in phòng tối vẫn làm. Mỗi loại giấy thật có độ tương phản và màu riêng. <b>Kỹ thuật số (Adobe RGB)</b>, mặc định, là một loại giấy lý tưởng.",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "Trước tiên hãy chọn giấy, như thợ in phòng tối vẫn làm. Mỗi loại giấy thật có độ tương phản và màu riêng. <b>Kỹ thuật số (Scan)</b>, mặc định, cho ảnh như một máy quét phim.",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "Khớp ma trận với bảng màu đã đánh dấu và lưu nó thành hồ sơ Đo được.",
   "Fit to Window": "Vừa cửa sổ",
   "Fit to window": "Vừa cửa sổ",

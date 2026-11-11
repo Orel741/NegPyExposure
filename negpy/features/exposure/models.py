@@ -192,7 +192,7 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     "base_luma_clip": 0.01,
     # Neutral per-tail clip for per-channel balance (orange-mask cast removal),
     # independent of luma range. The slider spans percentiles around this.
-    "base_color_clip": 20.0,
+    "base_color_clip": 1.0,
     # Scan-exposure warning: linear level treated as sensor-white clipping. Film
     # base and scene shadows sit near sensor white, so clipped pixels collapse
     # distinct densities to D=0.

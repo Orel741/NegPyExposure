@@ -1062,7 +1062,7 @@
   "Finishing": "Finishing",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "Finishing wie bei einem Laborscanner. <b>Chroma</b> legt die Farbstärke fest, <b>Schärfen</b> schärft Details, und <b>Glühen</b> und <b>Lichthof</b> fügen um helle Bereiche ein weiches oder ein rotes Glühen hinzu.",
   "First file": "Erste Datei",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "Wähle zuerst das Papier, wie im Fotolabor. Jedes echte Papier hat eigenen Kontrast und eigene Farben. <b>Digital (Adobe RGB)</b>, die Vorgabe, ist ein ideales Papier.",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "Wähle zuerst das Papier, wie im Fotolabor. Jedes echte Papier hat eigenen Kontrast und eigene Farben. <b>Digital (Scan)</b>, die Vorgabe, gibt das Bild wie ein Filmscanner wieder.",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "Die Matrix an die markierte Testtafel anpassen und als gemessenes Profil speichern.",
   "Fit to Window": "An Fenster anpassen",
   "Fit to window": "An Fenster anpassen",

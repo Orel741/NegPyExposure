@@ -1062,7 +1062,7 @@
   "Finishing": "마무리",
   "Finishing as a lab scanner does it. <b>Chroma</b> sets color strength, <b>Sharpening</b> sharpens detail, and <b>Glow</b> and <b>Halation</b> add a soft or a red glow around bright areas.": "현상소 스캐너처럼 마무리합니다. <b>크로마</b>는 색의 강도, <b>선명도</b>는 세부의 선명함을 정하고, <b>글로우</b>와 <b>헐레이션</b>은 밝은 부분 주위에 부드러운 빛이나 붉은 빛을 더합니다.",
   "First file": "첫 번째 파일",
-  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Adobe RGB)</b>, the default, is an ideal paper.": "암실 인화가처럼 먼저 인화지를 고르세요. 실제 인화지는 저마다 대비와 색이 다릅니다. 기본값인 <b>디지털 (Adobe RGB)</b>은 이상적인 인화지입니다.",
+  "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. <b>Digital (Scan)</b>, the default, renders as a film scanner does.": "암실 인화가처럼 먼저 인화지를 고르세요. 실제 인화지는 저마다 대비와 색이 다릅니다. 기본값인 <b>디지털 (Scan)</b>은 필름 스캐너처럼 표현합니다.",
   "Fit the matrix to the marked chart and save it as a Measured profile.": "표시한 차트에 행렬을 맞추고 실측 프로필로 저장합니다.",
   "Fit to Window": "창에 맞추기",
   "Fit to window": "창에 맞추기",
