@@ -269,7 +269,7 @@ def _record_axis(monkeypatch, confidences):
     calls = []
     axis = ((-1.7, -2.0, -1.0), (-2.5, -2.9, -1.4), None)
 
-    def fake_axis(grid, bounds, roi, buffer, exclude_subjects=True, sky_sector=True):
+    def fake_axis(grid, bounds, roi, buffer, exclude_subjects=True, sky_sector=True, shadow_band=None):
         calls.append(((bounds.floors, bounds.ceils), exclude_subjects))
         conf = confidences[len(calls) - 1]
         return None if conf is None else (*axis, conf)

@@ -217,7 +217,10 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # normalized luma.
     "neutral_axis_highlight_band": (0.10, 0.30),
     "neutral_axis_mid_band": (0.40, 0.60),
-    "neutral_axis_shadow_band": (0.72, 0.92),
+    "neutral_axis_shadow_band": (0.72, 0.95),
+    # The shadow band of a slide's axis (transparency curve and Fade Restoration), which has no
+    # levels' shadow point to reach.
+    "neutral_axis_transfer_shadow_band": (0.72, 0.92),
     # Lowest-chroma fraction of each band kept as the near-neutral set.
     "neutral_axis_chroma_quantile": 0.30,
     # Above this median corrected chroma (pass 2) the set is not trustworthy:
@@ -308,6 +311,11 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # Outside 0 to 1 clips: the tail prints past black or white.
     "scan_black_level": -0.05,
     "scan_white_level": 1.15,
+    # Bounds on the density span (normalized) the Auto levels stretch from the shadow tail to the
+    # highlight tail. The highlight end moves, the shadow end holds: a narrow frame is not stretched
+    # into noise, and a frame with a large bright area is not printed dark under it.
+    "scan_levels_span_min": 0.5,
+    "scan_levels_span_max": 0.7,
     # The code, as a fraction of the range, that a scan profile's Grade turns about.
     "scan_contrast_pivot": 0.45,
     # Whites and Blacks at full travel move their end by this fraction of the code range.

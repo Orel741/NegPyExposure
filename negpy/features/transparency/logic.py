@@ -690,7 +690,8 @@ def measure_transfer_neutral_axis(grid: np.ndarray, positive: bool) -> Optional[
     filled the shadow band falls outside the window.
     """
     bounds = transfer_axis_bounds(grid, positive)
-    refs = measure_neutral_axis_from_log(grid, LogNegativeBounds(*bounds), None, 0.0, exclude_subjects=False)
+    band = EXPOSURE_CONSTANTS["neutral_axis_transfer_shadow_band"]
+    refs = measure_neutral_axis_from_log(grid, LogNegativeBounds(*bounds), None, 0.0, exclude_subjects=False, shadow_band=band)
     if refs is not None or not positive or bounds == transfer_bounds():
         return refs
     luma = _grid_luma(grid)
@@ -700,7 +701,7 @@ def measure_transfer_neutral_axis(grid: np.ndarray, positive: bool) -> Optional[
     window = _positive_window(bounds[0][0], negpy_core.percentiles(above, [POSITIVE_AXIS_PERCENTILES[0]])[0])
     if window is None:
         return None
-    return measure_neutral_axis_from_log(grid, LogNegativeBounds(*window), None, 0.0, exclude_subjects=False)
+    return measure_neutral_axis_from_log(grid, LogNegativeBounds(*window), None, 0.0, exclude_subjects=False, shadow_band=band)
 
 
 # Slider units per mired. A Planckian shift from daylight raises red and lowers blue about

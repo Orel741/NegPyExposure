@@ -36,12 +36,22 @@ def test_only_a_scan_profile_has_a_scan_gamma():
 
 
 def test_the_levels_print_the_tails_at_the_scan_levels():
-    slopes, pivots, _ = _params(SCAN)
+    slopes, pivots, _ = _params(SCAN, highlight_point=0.33)
     c = effective_constants(SCAN)
     d_max = float(c["d_max"])
     line = lambda u: slopes[1] * (u - pivots[1])  # noqa: E731
     assert line(0.93) == pytest.approx(d_max * (1.0 - c["scan_black_level"]))
-    assert line(0.04) == pytest.approx(d_max * (1.0 - c["scan_white_level"]))
+    assert line(0.33) == pytest.approx(d_max * (1.0 - c["scan_white_level"]))
+
+
+@pytest.mark.parametrize("highlight_point, span_key", [(0.04, "scan_levels_span_max"), (0.85, "scan_levels_span_min")])
+def test_the_levels_hold_the_shadow_point_and_bound_the_span(highlight_point, span_key):
+    slopes, pivots, _ = _params(SCAN, highlight_point=highlight_point)
+    c = effective_constants(SCAN)
+    d_max = float(c["d_max"])
+    line = lambda u: slopes[1] * (u - pivots[1])  # noqa: E731
+    assert line(0.93) == pytest.approx(d_max * (1.0 - c["scan_black_level"]))
+    assert line(0.93 - c[span_key]) == pytest.approx(d_max * (1.0 - c["scan_white_level"]))
 
 
 def test_a_paper_ignores_the_highlight_point():
@@ -170,10 +180,10 @@ def test_the_standard_tone_profile_is_the_scan_levels():
 
 
 def test_a_linear_tone_profile_prints_the_tails_at_black_and_white():
-    params = _params(SCAN, tone_profile="linear")
+    params = _params(SCAN, tone_profile="linear", highlight_point=0.33)
     d_max = float(effective_constants(SCAN)["d_max"])
     assert _green(params, 0.93) == pytest.approx(d_max)
-    assert _green(params, 0.04) == pytest.approx(0.0, abs=1e-9)
+    assert _green(params, 0.33) == pytest.approx(0.0, abs=1e-9)
 
 
 def test_a_hard_tone_profile_is_steeper_than_a_soft_one():

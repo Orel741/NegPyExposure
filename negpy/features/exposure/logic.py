@@ -1163,10 +1163,13 @@ def scan_levels(
     """`params` rescaled and shifted in density so that the reference line (green at neutral
     Grade and Density) prints the shadow point at the black level and the highlight point at
     the white level, as fractions of the code range. `levels` is (black, white), by default
-    scan_black_level and scan_white_level."""
+    scan_black_level and scan_white_level. The span between the points is held within
+    scan_levels_span_min and scan_levels_span_max by moving the highlight point."""
     span = float(shadow_point) - float(highlight_point)
     if span < 1e-3 or abs(ref_slope) < 1e-6:
         return params
+    span = min(max(span, float(c["scan_levels_span_min"])), float(c["scan_levels_span_max"]))
+    highlight_point = float(shadow_point) - span
     d_max = float(c["d_max"])
     black, white = levels if levels is not None else (c["scan_black_level"], c["scan_white_level"])
     d_black = d_max * (1.0 - float(black))
