@@ -1,21 +1,22 @@
 from negpy.kernel.system.i18n import tr
 
-from PyQt6.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QDialog, QVBoxLayout
 
 from negpy.desktop.auto_sliders import grade_softest_reached, shown_values
 from negpy.desktop.view.confirm import warn_targets_affect_unbaked
 from negpy.desktop.view.shortcut_registry import tooltip_with_shortcut
 from negpy.desktop.view.sidebar.base import BaseSidebar, SliderPage
-from negpy.desktop.view.styles.templates import ICON_BUTTON_WIDTH, TEST_STRIP_SWEEP, gradient_icon, hint_label, wrap_tooltip
+from negpy.desktop.view.styles.templates import ICON_BUTTON_WIDTH, TEST_STRIP_SWEEP, field_row, gradient_icon, hint_label, wrap_tooltip
 from negpy.desktop.view.styles.theme import THEME
 from negpy.desktop.view.widgets.segmented_choice import SegmentedChoice, ToggleMenuButton
 from negpy.desktop.view.widgets.collapsible import hidden_by_gating
 from negpy.desktop.view.widgets.fold import group_fold
 from negpy.desktop.view.widgets.sliders import CompactSlider
+from negpy.desktop.view.widgets.step_combo import StepCombo
 from negpy.features.hdr.models import hdr_active
 from negpy.features.exposure.auto_sliders import NEUTRAL
 from negpy.features.exposure.papers import effective_paper_profile
-from negpy.features.exposure.models import EXPOSURE_CONSTANTS, TUNABLE_TARGETS, apply_targets
+from negpy.features.exposure.models import EXPOSURE_CONSTANTS, TONE_PROFILES, TUNABLE_TARGETS, apply_targets
 
 _ISO_R_MIN = float(EXPOSURE_CONSTANTS["iso_r_min"])
 _ISO_R_MAX = float(EXPOSURE_CONSTANTS["iso_r_max"])
@@ -52,6 +53,15 @@ def simple_stored(field: str, pos: float) -> float:
 def _simple_slider(label: str) -> CompactSlider:
     return CompactSlider(label, -_SCALE_TRAVEL, _SCALE_TRAVEL, 0.0, step=1.0, has_neutral=True)
 
+
+_TONE_PROFILE_LABELS = {
+    "standard": tr("Standard"),
+    "soft": tr("Soft"),
+    "hard": tr("Hard"),
+    "linear": tr("Linear"),
+    "flat": tr("Flat"),
+    "deep": tr("Deep"),
+}
 
 _CH_SUFFIX = ("red", "green", "blue")
 _CH_LABEL = ("", " R", " G", " B")
@@ -163,11 +173,13 @@ class ToneSidebar(BaseSidebar):
         self.test_strip_btn.setFixedWidth(ICON_BUTTON_WIDTH)
         self.test_strip_btn.clicked.connect(lambda checked: self.controller.toggle_test_strip(force=checked))
 
-        tools_row = QHBoxLayout()
-        tools_row.addStretch()
-        tools_row.addWidget(self.auto_btn)
-        tools_row.addWidget(self.test_strip_btn)
-        self.layout.addLayout(tools_row)
+        self.tone_profile_combo = StepCombo.of(
+            [_TONE_PROFILE_LABELS[key] for key in TONE_PROFILES],
+            tr("The starting look: how deep the blacks, how bright the whites and how light the midtones are."),
+            list(TONE_PROFILES),
+        )
+        self.tone_profile_row = field_row(tr("Tone profile"), self.tone_profile_combo, self.auto_btn, self.test_strip_btn)
+        self.layout.addLayout(self.tone_profile_row)
         # Disabled widgets get no hover, so the reason hangs off the hint under them.
         self.auto_merged_hint = hint_label(tr("Not applied to a merged bracket."))
         self.auto_merged_hint.setToolTip(
@@ -322,6 +334,11 @@ class ToneSidebar(BaseSidebar):
             slider.dragStarted.connect(lambda f=field: self.controller.tone_drag_changed.emit(f))
             slider.dragEnded.connect(lambda: self.controller.tone_drag_changed.emit(""))
         self.controller.image_updated.connect(self._sync_driven)
+        self.tone_profile_combo.currentIndexChanged.connect(
+            lambda _i: self.update_config_section(
+                "exposure", render=True, persist=True, readback_metrics=True, tone_profile=self.tone_profile_combo.currentData()
+            )
+        )
         self.hold_black_action.toggled.connect(
             lambda checked: self.update_config_section("exposure", render=True, persist=True, readback_metrics=True, hold_black=checked)
         )
@@ -437,6 +454,9 @@ class ToneSidebar(BaseSidebar):
             # Brightness is the scan transfer's exponent, which a paper does not have.
             paper = effective_paper_profile(conf.paper_profile, proc.process_mode)
             self.brightness_slider.setVisible(not transfer and paper.scan)
+            # A paper has its own curve, so the profiles act on a scan stock only.
+            self.tone_profile_combo.setEnabled(not transfer and paper.scan)
+            self.tone_profile_combo.setCurrentIndex(max(self.tone_profile_combo.findData(conf.tone_profile), 0))
             # Per-layer trims are meaningless on a single-emulsion B&W paper.
             is_bw = is_mono(self.state.config.process)
             if is_bw:
@@ -485,6 +505,7 @@ class ToneSidebar(BaseSidebar):
     def block_signals(self, blocked: bool) -> None:
         for w in (
             self.ch_btn,
+            self.tone_profile_combo,
             self.density_slider,
             self.brightness_slider,
             self.grade_slider,

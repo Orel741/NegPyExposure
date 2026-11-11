@@ -187,7 +187,7 @@ class TestExposureParity:
 
     def test_scan_stock_with_levels_and_brightness(self):
         base = _make_base_settings()
-        exposure = replace(base.exposure, paper_profile="scan", grade=100.0, whites=0.4, blacks=-0.3, brightness=0.5)
+        exposure = replace(base.exposure, paper_profile="scan", grade=100.0, whites=0.4, blacks=-0.3, brightness=0.5, tone_profile="deep")
         self._run_and_compare(replace(base, exposure=exposure))
 
     def test_scan_stock_without_auto(self):

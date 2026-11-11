@@ -66,6 +66,8 @@ class ExposureConfig:
     blacks: float = 0.0
     # Midtone brightness of a scan profile, -1 to 1; the ends hold (papers.scan_gamma).
     brightness: float = 0.0
+    # A scan profile's starting look: a key of TONE_PROFILES.
+    tone_profile: str = "standard"
     # A shadow lift fades to nothing at paper black, so the black point barely moves.
     hold_black: bool = False
     # Tone mask: lifts large dark areas and holds back large bright ones, more the farther they sit
@@ -337,6 +339,23 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # the picture. Inlined as a WGSL literal: change both.
     "separation_damping_ref_spread": 0.35,
 }
+
+# A scan profile's starting looks: (black level, white level, Brightness offset, contrast gain).
+# The levels replace scan_black_level and scan_white_level, and the gain scales density about
+# scan_contrast_pivot. An unknown key reads as "standard".
+TONE_PROFILES: Dict[str, Tuple[float, float, float, float]] = {
+    "standard": (float(EXPOSURE_CONSTANTS["scan_black_level"]), float(EXPOSURE_CONSTANTS["scan_white_level"]), 0.0, 1.0),
+    "soft": (0.0, 1.10, 0.1, 0.85),
+    "hard": (-0.08, 1.20, 0.0, 1.2),
+    "linear": (0.0, 1.0, 0.0, 1.0),
+    "flat": (0.02, 1.0, 0.15, 0.8),
+    "deep": (-0.10, 1.15, -0.2, 1.1),
+}
+
+
+def tone_profile_values(key: str) -> Tuple[float, float, float, float]:
+    return TONE_PROFILES.get(key, TONE_PROFILES["standard"])
+
 
 # Auto Density / Auto Grade targets the user can retune (Set Targets dialog).
 # App-global, not per-image: one calibration per install. key -> (min, max).

@@ -132,11 +132,12 @@ Korrigiert die Farbe des Abzugs, wie die Farbfilter eines Vergrößerers in der 
 *   **Farbstichentfernung**: entfernt einen Farbstich, der in den dunklen und hellen Teilen des Bildes unterschiedlich ist. Der Start liegt bei 0,5 (halb) bei Farbnegativen und bei 0 bei Dias. Blätter, Himmel und Wasser gelten nicht als grau und behalten ihre Farbe.
 *   **Filter**: ein Farbfilter, wie er bei Schwarzweißfilm vor dem Kameraobjektiv sitzt. Er erscheint nur bei einem Farbnegativ oder Farbdia in S/W, und ersetzt die Regler darüber. Jeder Filter dunkelt die Farben ab, die seiner eigenen gegenüberliegen. Gelb #8, Tiefgelb #15, Orange #21 und Rot #25 machen einen blauen Himmel Schritt für Schritt dunkler. Rot macht außerdem Blätter dunkel und Haut blass. Gelbgrün #11 und Grün #58 machen Blätter heller und Haut dunkler. Keiner gibt den Look eines normalen Schwarzweißfilms.
 
-<!-- panel:tone src:58aae57a -->
+<!-- panel:tone src:0caf4259 -->
 ### 5.2 Tonwerte: Helligkeit und Kontrast
 
 Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beginnt bei 0, und ein Doppelklick setzt ihn zurück.
 
+*   **Tonprofil** (nur beim Papier Digital (Scan)): der Ausgangslook. **Standard** ist die Vorgabe. **Weich** und **Hart** haben weniger und mehr Kontrast. **Linear** schneidet bei Schwarz und Weiß nichts ab. **Flach** hat wenig Kontrast, als Ausgangspunkt für deine eigene Bearbeitung. **Tief** hat dunkle Schatten.
 *   **Belichtung**: wie hell oder dunkel das Bild ist. Höher ist heller.
 *   **Helligkeit** (nur beim Papier Digital (Scan)): hellt die Mitteltöne auf oder dunkelt sie ab. Schwarz und Weiß bleiben an ihrem Platz.
 *   **Kontrast**: der Unterschied zwischen dunklen und hellen Tönen. Höher gibt mehr Kontrast.
@@ -152,7 +153,7 @@ Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beg
     *   **Schattengradation** / **Lichtergradation**: Kontrast nur in den Schatten oder nur in den Lichtern.
     *   **Vorbelichtung**: bringt Details in den hellsten Bereichen zurück.
     *   **Diffusion**: ein weiches Glühen. Dunkle Bereiche breiten sich in helle aus.
-    *   **Kontrastmaske**: öffnet große dunkle Bereiche, hält große helle zurück und erhält feine Details. In der Dunkelkammer entsteht dieser Effekt mit einer weichen, unscharfen Maske auf dem Negativ. Beim digitalen Abzug erreichen Fujifilm-Frontier-Scanner mit HyperTone einen ähnlichen Effekt. Bereiche weit vom mittleren Grau ändern sich am meisten, daher ändert sich ein kontrastarmes Bild wenig.
+    *   **Kontrastmaske**: öffnet große dunkle Bereiche, hält große helle zurück und erhält feine Details. Beim digitalen Abzug erreichen Fujifilm-Frontier-Scanner mit HyperTone einen ähnlichen Effekt.
 
 **Weißpunkt** und **Schwarzpunkt** findest du auf der Karte **Messung** im Tab Rolle ([§10.6](#106-metering-negative--positive)).
 

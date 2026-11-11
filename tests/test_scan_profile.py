@@ -159,3 +159,29 @@ def test_brightness_lightens_the_midtones_and_holds_the_ends():
     assert mid.any() and np.all(bright[0, mid, 1] > base[0, mid, 1])
     assert bright[0, :, 1].min() == pytest.approx(base[0, :, 1].min(), abs=1e-4)
     assert bright[0, :, 1].max() == pytest.approx(base[0, :, 1].max(), abs=1e-2)
+
+
+def test_the_standard_tone_profile_is_the_scan_levels():
+    from negpy.features.exposure.models import TONE_PROFILES
+
+    assert TONE_PROFILES["standard"] == (EXPOSURE_CONSTANTS["scan_black_level"], EXPOSURE_CONSTANTS["scan_white_level"], 0.0, 1.0)
+    assert _params(SCAN, tone_profile="standard") == _params(SCAN)
+    assert _params(SCAN, tone_profile="no such profile") == _params(SCAN)
+
+
+def test_a_linear_tone_profile_prints_the_tails_at_black_and_white():
+    params = _params(SCAN, tone_profile="linear")
+    d_max = float(effective_constants(SCAN)["d_max"])
+    assert _green(params, 0.93) == pytest.approx(d_max)
+    assert _green(params, 0.04) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_a_hard_tone_profile_is_steeper_than_a_soft_one():
+    assert _params(SCAN, tone_profile="hard")[0][1] > _params(SCAN)[0][1] > _params(SCAN, tone_profile="soft")[0][1]
+
+
+def test_a_paper_ignores_the_tone_profile():
+    paper = PAPER_PROFILES["neutral"]
+    assert _params(paper, tone_profile="hard") == _params(paper)
+    assert scan_gamma(paper, 0.0, "deep") == 0.0
+    assert scan_gamma(SCAN, 0.0, "deep") > scan_gamma(SCAN)

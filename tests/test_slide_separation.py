@@ -35,7 +35,7 @@ METERS = {"auto_exposure", "auto_normalize_contrast"}
 # The paper model's own controls; the transfer curve has no paper to apply them to.
 PRINT_ONLY = (
     {"contrast_mask_strength", "diffusion", "paper_dmin", "paper_black", "paper_profile", "preflash", "hold_black", "bw_filter"}
-    | {"whites", "blacks", "brightness"}
+    | {"whites", "blacks", "brightness", "tone_profile"}
     | {n + t for n in ("grade",) for t in _TRIMS}
     | _with_trims("shadow_grade", "highlight_grade", "midtone_gamma")
 )
@@ -74,6 +74,8 @@ def _moved(field: str, value):
         return "kodak_endura"
     if field == "bw_filter":
         return BwFilter.RED_25
+    if field == "tone_profile":
+        return "hard"
     if "grade" in field:
         return value + 15.0
     if field in ("toe_width", "shoulder_width"):

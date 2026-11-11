@@ -334,3 +334,17 @@ def test_flat_negative_shows_the_softest_grade_hint(qapp):
     controller.state.config = replace(cfg, exposure=replace(cfg.exposure, grade=170.0))
     sidebar.sync_ui()
     assert not sidebar.grade_softest_hint.isHidden()
+
+
+def test_the_tone_profile_writes_its_key_and_waits_on_a_scan_stock(qapp):
+    controller, sidebar = _metered_sidebar()
+    sidebar.sync_ui()
+    assert sidebar.tone_profile_combo.isEnabled()
+    sidebar.tone_profile_combo.setCurrentIndex(sidebar.tone_profile_combo.findData("deep"))
+    assert controller.apply_config.call_args.args[0].exposure.tone_profile == "deep"
+
+    conf = controller.state.config
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, paper_profile="neutral", tone_profile="hard"))
+    sidebar.sync_ui()
+    assert not sidebar.tone_profile_combo.isEnabled()
+    assert sidebar.tone_profile_combo.currentData() == "hard"

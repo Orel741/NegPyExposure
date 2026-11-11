@@ -221,6 +221,7 @@ CATALOG: list[tuple[str, tuple[SettingRow, ...]]] = [
     )),
     (mark("Tone"), (
         _row(mark("Print Density"), "exposure", "density"),
+        _row(mark("Tone Profile"), "exposure", "tone_profile"),
         _row(mark("Brightness"), "exposure", "brightness"),
         _row(mark("ISO-R Grade"), "exposure", "grade"),
         _row(mark("Whites"), "exposure", "whites"),

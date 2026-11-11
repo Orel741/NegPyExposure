@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from negpy.features.exposure.models import EXPOSURE_CONSTANTS
+from negpy.features.exposure.models import EXPOSURE_CONSTANTS, tone_profile_values
 from negpy.features.exposure.print_lut import DyeLut, DyeMatrix, DyeMatrixRows, PrintColor, PrintLut, flat_matrix, load_print_lut
 from negpy.features.process.models import ProcessMode
 from negpy.kernel.image.logic import _WORKING_GAMMA
@@ -449,13 +449,14 @@ def effective_paper_profile(key: str, process_mode: str | None) -> PaperProfile:
     return PAPER_PROFILES[DEFAULT_PROFILE_KEY]
 
 
-def scan_gamma(paper: PaperProfile | None, brightness: float = 0.0) -> float:
+def scan_gamma(paper: PaperProfile | None, brightness: float = 0.0, tone_profile: str = "standard") -> float:
     """The scan transfer's exponent for the kernels: the working TRC's inverse at neutral
     Brightness, so the encoded code is linear in print density. 0 for a paper."""
     if paper is None or not paper.scan:
         return 0.0
     stops = float(EXPOSURE_CONSTANTS["scan_brightness_stops"])
-    return _WORKING_GAMMA * 2.0 ** (-stops * max(-1.0, min(1.0, float(brightness))))
+    total = max(-1.0, min(1.0, float(brightness))) + tone_profile_values(tone_profile)[2]
+    return _WORKING_GAMMA * 2.0 ** (-stops * total)
 
 
 def effective_constants(paper: PaperProfile | None) -> Dict[str, Any]:

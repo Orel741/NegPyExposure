@@ -276,6 +276,7 @@ Corrects the color of the print, as the color filters of a darkroom enlarger do.
 
 How light or dark the picture is, and how much contrast it has. Each slider starts at 0, and a double-click puts it back.
 
+*   **Tone profile** (Digital (Scan) stock only): the starting look. **Standard** is the default. **Soft** and **Hard** have less and more contrast. **Linear** clips nothing at black or white. **Flat** is low in contrast, as a start for your own edit. **Deep** has dark shadows.
 *   **Exposure**: how light or dark the picture is. Higher is lighter.
 *   **Brightness** (Digital (Scan) stock only): lightens or darkens the midtones. Black and white stay where they are.
 *   **Contrast**: the difference between dark and light tones. Higher gives more contrast.
@@ -291,7 +292,7 @@ How light or dark the picture is, and how much contrast it has. Each slider star
     *   **Shadows Grade** / **Highlights Grade**: contrast in the shadows or the highlights only.
     *   **Preflash**: brings back detail in the brightest areas.
     *   **Diffusion**: a soft glow; dark areas spread into bright ones.
-    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail. In the darkroom, a printer gets this with a soft, blurred mask placed on the negative. In digital printing, Fujifilm Frontier scanners get a similar effect with HyperTone. Areas far from mid-gray change most, so a low-contrast frame changes little.
+    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail. Fujifilm Frontier scanners get a similar effect with HyperTone.
 
 **White Point** and **Black Point** are on the Roll tab's **Metering** card ([§10.6](#106-metering-negative--positive)).
 
