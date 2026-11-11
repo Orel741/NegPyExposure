@@ -14,7 +14,7 @@ For the math behind each step, read [PIPELINE.md](PIPELINE.md).
 *   **Folder roll**: a roll of the image files in one folder. New files in the folder join it.
 *   **Virtual roll**: a roll of a fixed list of frames, from any folders. New files never join it.
 *   **Density**: how dark a part of the negative or the print is. A dense negative is dark; on a print, more density is darker.
-*   **Print Density**: how light or dark the print is, like the exposure time under an enlarger.
+*   **Exposure**: how light or dark the picture is.
 *   **Grade**: the contrast of the print, like the contrast grade of darkroom paper. NegPy uses the ISO-R scale, where a lower number gives more contrast.
 *   **Stop**: a doubling of light. +1 stop is twice the light, −1 stop half.
 *   **Print stock**: the paper the picture prints on. Each paper has its own contrast and colors.
@@ -87,7 +87,7 @@ A new frame gets the roll's film type, and the crop, print stock and Lab setting
 *   **Grain Focuser** (`Shift+L`, **Overlays** menu): a magnifier at the pointer that shows the exported pixels at their true size, with a sharpness number.
 *   **Reference View** (`Shift+R`): pins this frame beside the canvas, to match other frames to it.
 *   **Probe at Cursor** (`Shift+I`, **Overlays** menu): shows the density and zone under the pointer.
-*   **Find** (`Ctrl+K`): finds any slider, card or action by name, or by another app's word (*contrast* finds **ISO-R Grade**).
+*   **Find** (`Ctrl+K`): finds any slider, card or action by name, or by another app's word (*grade* finds **Contrast**).
 
 `Esc` closes any peek, split or test strip.
 
@@ -202,7 +202,7 @@ Triangles in the top corners warn when shadows go pure black (left) or highlight
 
 The **step wedge** prints 21 gray steps; steps that merge into black or white are lost tones. The **zone strip** shows how much of the frame falls in each zone, from 0 (black) through V (middle gray) to X (white). Double-click it (or press `Shift+Z`) for the **Zone Overlay**, which colors the picture by zone.
 
-Click a zone on the strip, then a spot on the picture, and NegPy sets the print so that spot prints in that zone. One pin sets Print Density; a second also sets ISO-R Grade. **Place Zones** (or Enter) applies the result; `Esc` cancels.
+Click a zone on the strip, then a spot on the picture, and NegPy sets the print so that spot prints in that zone. One pin sets Exposure; a second also sets Contrast. **Place Zones** (or Enter) applies the result; `Esc` cancels.
 
 #### Readouts
 
@@ -274,22 +274,25 @@ Corrects the color of the print, as the color filters of a darkroom enlarger do.
 <!-- panel:tone -->
 ### 5.2 Tone: brightness and contrast
 
-How light or dark the print is, and how much contrast it has.
+How light or dark the picture is, and how much contrast it has. Each slider starts at 0, and a double-click puts it back.
 
-*   **Print Density**: how light or dark the print is (the darkroom's exposure time). Lower is lighter.
-*   **ISO-R Grade**: contrast (the darkroom's paper grade). A lower number gives more contrast; about 110 is normal.
-*   **Auto** (the wand, also on the Exposure tab's bar): **Auto Density** and **Auto Grade** set brightness and contrast for each frame, so a roll prints evenly. A slider then shows the automatic value: move it to adjust, double-click it to go back. Right-click the wand to turn both on or off. The Auto menu also has:
+*   **Tone profile** (Digital (Scan) stock only): the starting look. **Standard** is the default. **Soft** and **Hard** have less and more contrast. **Linear** clips nothing at black or white. **Flat** is low in contrast, as a start for your own edit. **Deep** has dark shadows.
+*   **Exposure**: how light or dark the picture is. Higher is lighter.
+*   **Brightness** (Digital (Scan) stock only): lightens or darkens the midtones. Black and white stay where they are.
+*   **Contrast**: the difference between dark and light tones. Higher gives more contrast.
+*   **Lights** / **Darks**: lighten (positive) or darken (negative) only the highlights or only the shadows.
+*   **Whites** / **Blacks**: move the white point or the black point. Positive Whites brightens the lightest tones. Negative Blacks deepens the darkest tones.
+*   **Auto** (the wand, also on the Exposure tab's bar): **Auto Density** and **Auto Grade** set brightness and contrast for each frame, so a roll prints evenly. The sliders then adjust from the automatic values. Right-click the wand to turn both on or off. The Auto menu also has:
     *   **Set Targets…**: the brightness and contrast Auto aims for.
     *   **Bake Auto Density/Grade**: keeps this frame's automatic values and turns Auto off for it.
     *   **Hold Black**: when you lighten the shadows, the deepest blacks stay black.
 *   **Test Strip** (`Shift+T`): a grid of versions at different brightness and contrast. Click the one you like. `Esc` closes it.
-*   **Shadows Density** / **Highlights Density** (fold under Print Density): darken or lighten only the shadows or the highlights.
-*   **Shadows Grade** / **Highlights Grade** (fold under ISO-R Grade): contrast in the shadows or the highlights only.
-*   **Printing Aids** (fold):
+*   **Advanced** (fold): the darkroom controls.
+    *   **Global / R / G / B**: R, G or B applies the grades to one color only, for a cast that differs between shadows and highlights.
+    *   **Shadows Grade** / **Highlights Grade**: contrast in the shadows or the highlights only.
     *   **Preflash**: brings back detail in the brightest areas.
     *   **Diffusion**: a soft glow; dark areas spread into bright ones.
-    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail. In the darkroom, a printer gets this with a soft, blurred mask placed on the negative. In digital printing, Fujifilm Frontier scanners get a similar effect with HyperTone. Areas far from mid-gray change most, so a low-contrast frame changes little.
-*   **Global / R / G / B**: R, G or B applies the grades to one color only, for a cast that differs between shadows and highlights.
+    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail. Fujifilm Frontier scanners get a similar effect with HyperTone.
 
 **White Point** and **Black Point** are on the Roll tab's **Metering** card ([§10.6](#106-metering-negative--positive)).
 
@@ -298,7 +301,7 @@ How light or dark the print is, and how much contrast it has.
 
 The paper the picture prints on, and how it turns light into tones from black to white.
 
-*   **Print stock**: the paper. A real paper sets the contrast curve and the colors from its maker's data. **Digital (Adobe RGB)**, the default, is an ideal paper. **Digital (Pakon)** has the colors of a Pakon lab scanner. **Digital (Frontier)** has the colors and the contrast curve of a Fujifilm Frontier lab scan.
+*   **Print stock**: the paper. A real paper sets the contrast curve and the colors from its maker's data. **Digital (Scan)**, the default, renders as a film scanner does, with clean blacks and bright highlights. **Digital (Adobe RGB)** is an ideal paper. **Digital (Pakon)** has the colors of a Pakon lab scanner. **Digital (Frontier)** has the colors and the contrast curve of a Fujifilm Frontier lab scan.
 *   **Paper Test Strip** (the striped button): prints the frame on every paper. Click a paper to see it large, step with the arrow keys, and press **Keep** to use it.
 *   **Dye Separation**: color strength in the print. 1 is unchanged. **Separation Damping** puts more of the change on dull colors and less on strong ones. **Chroma** on the Look tab changes all colors evenly instead.
 *   **Paper White**: shows the white of real paper, a little darker than pure white.
@@ -555,7 +558,7 @@ To turn a negative into a positive, NegPy measures its darkest and brightest par
 *   **Dmin** / **Dmax** (Pick by Hand fold): for a frame that NegPy measures badly. Click **Dmin**, then the film base or the deepest shadow, to set the black point. Click **Dmax**, then the brightest highlight, to set the white point. Each **×** clears its own point. Both are off while the frame prints on the roll average.
 *   **White Point** / **Black Point** (fold): move the measured white and black points. A positive white point brightens the print; a positive black point lifts the blacks. **R / G / B** moves one color only.
 
-A **slide** needs no inversion: the tone controls shape the picture directly. Auto Density and Auto Grade start off; turn them on for a faded slide. On a slide, Draw Region sets the area that Estimate, Remove Stain, Cast Removal, Auto Density and Auto Grade measure. Draw it before you click Estimate. In Lightroom terms, Exposure is Print Density (lower is brighter), Contrast is ISO-R Grade, and Shadows and Highlights are Shadows and Highlights Density.
+A **slide** needs no inversion: the tone controls shape the picture directly. Auto Density and Auto Grade start off; turn them on for a faded slide. On a slide, Draw Region sets the area that Estimate, Remove Stain, Cast Removal, Auto Density and Auto Grade measure. Draw it before you click Estimate.
 
 <!-- panel:baseline -->
 ### 10.7 Roll Analysis

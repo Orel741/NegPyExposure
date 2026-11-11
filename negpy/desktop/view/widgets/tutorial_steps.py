@@ -264,7 +264,7 @@ def build(window: "MainWindow") -> list[TutorialStep]:
             tr("Print Stock"),
             tr(
                 "First pick the paper, as a darkroom printer does. Each real paper has its own contrast and colors. "
-                "<b>Digital (Adobe RGB)</b>, the default, is an ideal paper."
+                "<b>Digital (Scan)</b>, the default, renders as a film scanner does."
             ),
             lambda w: cp(w).paper_section,
             focus=lambda w: cp(w).paper_sidebar.paper_combo,
@@ -275,28 +275,28 @@ def build(window: "MainWindow") -> list[TutorialStep]:
         ),
         step(
             PRINTING,
-            tr("Print Density"),
+            tr("Exposure"),
             tr(
-                "<b>Print Density</b> sets how light or dark the print is, like the exposure time under an enlarger. "
-                "Lower is lighter. Auto Density sets it for each frame; your change adjusts from there."
+                "<b>Exposure</b> sets how light or dark the picture is. Higher is lighter. "
+                "Auto Density sets the brightness of each frame; your change adjusts from there."
             ),
             lambda w: cp(w).tone_section,
             focus=lambda w: cp(w).tone_sidebar.density_slider,
-            task=tr("Drag Print Density and watch the print."),
+            task=tr("Drag Exposure and watch the picture."),
             watch=lambda w: w.state.config.exposure.density,
             guide=("tone", "Tone"),
             offer=_DEMO,
         ),
         step(
             PRINTING,
-            tr("ISO-R Grade"),
+            tr("Contrast"),
             tr(
-                "<b>ISO-R Grade</b> is contrast, like the grade of darkroom paper. A lower number gives more "
-                "contrast, and about 110 is normal. Auto Grade sets it for each frame."
+                "<b>Contrast</b> sets the difference between dark and light tones. Higher gives more contrast. "
+                "Auto Grade sets the contrast of each frame; your change adjusts from there."
             ),
             lambda w: cp(w).tone_section,
             focus=lambda w: cp(w).tone_sidebar.grade_slider,
-            task=tr("Drag ISO-R Grade."),
+            task=tr("Drag Contrast."),
             watch=lambda w: w.state.config.exposure.grade,
             guide=("tone", "Tone"),
             offer=_DEMO,
@@ -313,17 +313,15 @@ def build(window: "MainWindow") -> list[TutorialStep]:
         ),
         step(
             PRINTING,
-            tr("Shadows and Highlights"),
+            tr("Lights and Darks"),
             tr(
-                "The folds under Print Density and ISO-R Grade change only the shadows or only the highlights: "
-                "lighter, darker, or more or less contrast."
+                "<b>Lights</b> and <b>Darks</b> change only the highlights or only the shadows. "
+                "<b>Whites</b> and <b>Blacks</b> move the two ends of the tone range."
             ),
             lambda w: cp(w).tone_section,
             focus=lambda w: cp(w).tone_sidebar.shadow_density_slider,
-            task=tr("Drag one of the four zone sliders."),
-            watch=lambda w: tuple(
-                getattr(w.state.config.exposure, f) for f in ("shadow_density", "highlight_density", "shadow_grade", "highlight_grade")
-            ),
+            task=tr("Drag Lights, Darks, Whites or Blacks."),
+            watch=lambda w: tuple(getattr(w.state.config.exposure, f) for f in ("shadow_density", "highlight_density", "whites", "blacks")),
             guide=("tone", "Tone"),
             offer=_DEMO,
         ),

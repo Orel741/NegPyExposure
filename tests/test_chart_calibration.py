@@ -136,7 +136,7 @@ def test_fit_config_meters_the_frame_on_its_own() -> None:
     assert p.crosstalk_strength == 1.0 and p.crosstalk_matrix[0] == 2.0
     assert not (p.use_luma_average or p.use_color_average or p.use_cast_average or p.lock_bounds)
     # A stock's dyes are a print look; fitted through them they would land in the rig's matrix.
-    assert cfg.exposure.paper_profile == WorkspaceConfig().exposure.paper_profile
+    assert cfg.exposure.paper_profile == "neutral"
 
 
 def test_worker_renders_through_the_real_pipeline() -> None:

@@ -17,9 +17,9 @@ def test_build_targets_includes_action_description():
 def test_build_targets_includes_slider_group_label():
     targets = build_shortcut_editor_targets()
     density = next(t for t in targets if t.target_id == "density")
-    assert density.label == "Print Density ↑/↓"
+    assert density.label == "Exposure ↑/↓"
     assert density.row_kind == "slider"
-    assert "density" in density.search_text
+    assert "exposure" in density.search_text
 
 
 def test_search_matches_current_key_binding():

@@ -2322,7 +2322,7 @@ class AppController(QObject):
         # After the open frame's persist, which rewrites the new-file snapshot from that frame.
         sticky = self.session.repo.get_global_setting(STICKY_CONFIG_KEY)
         sticky = dict(sticky) if isinstance(sticky, dict) else {}
-        if sticky.get("paper_profile", "neutral") in SCAN_SETUP_PAPERS:
+        if sticky.get("paper_profile", "scan") in SCAN_SETUP_PAPERS:
             self.session.repo.save_global_setting(STICKY_CONFIG_KEY, {**sticky, "paper_profile": paper})
 
         count = 0
@@ -4032,9 +4032,9 @@ class AppController(QObject):
         sol = self._pin_solution
         if sol is None or not self.state.zone_pins:
             return ""
-        controls = [tr("Print Density")]
+        controls = [tr("Exposure")]
         if "grade" in sol.fields:
-            controls.append(tr("ISO-R Grade"))
+            controls.append(tr("Contrast"))
         if sol.knee:
             controls.append(_KNEE_LABELS[sol.knee])
         return tr("Solving {controls}", controls=" + ".join(controls))

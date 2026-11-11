@@ -53,15 +53,44 @@ def _auto_slope(exposure: ExposureConfig, process_mode: Optional[str], metrics: 
     return auto_base_slope(exposure.grade, True, lum_range, textural, metrics.get("shadow_point"), anchor, d_min, profile, mg)
 
 
+def _scan_levels(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Optional[Tuple[float, float]]:
+    """Green's (slope, pivot) under a scan profile's levels, None where they do not act."""
+    profile, _ = _paper(exposure, process_mode)
+    if not profile.scan or not exposure.auto_exposure or not exposure.auto_normalize_contrast:
+        return None
+    if any(metrics.get(k) is None for k in ("metered_anchor", "shadow_point", "highlight_point", "norm_density_range")):
+        return None
+    slopes, pivots, _ = curve_params_from_metrics(exposure, process_mode, metrics)
+    return slopes[1], pivots[1]
+
+
+def _scan_shown(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Optional[Dict[str, float]]:
+    """The Density and Grade that print a scan profile's levels with both Autos off."""
+    placed = _scan_levels(exposure, process_mode, metrics)
+    if placed is None:
+        return None
+    slope, pivot = placed
+    profile, d_min = _paper(exposure, process_mode)
+    mg = effective_midtone_gamma(profile, exposure.midtone_gamma)
+    mult = float(effective_constants(profile)["density_multiplier"])
+    density = 1.0 - (pivot - compute_pivot(slope, 1.0, d_min, paper=profile, midtone_gamma=mg)) / mult
+    return {"density": density, "grade": slope_to_grade(slope, metrics["norm_density_range"], slope_gain(profile))}
+
+
 def print_shown_values(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Dict[str, float]:
     """Manual-equivalent value of every slider an auto drives, for the autos that are on
-    and metered. Grade is the ISO R that prints the auto's slope on the frame's own range."""
+    and metered. Grade is the ISO R that prints the auto's slope on the frame's own range.
+    Whites and Blacks act after either, so the values leave them out."""
+    exposure = replace(exposure, whites=0.0, blacks=0.0)
     shown: Dict[str, float] = {}
+    scan = _scan_shown(exposure, process_mode, metrics)
     shift = _density_shift(exposure, process_mode, metrics)
-    if shift is not None:
+    if scan is not None:
+        shown.update(scan)
+    elif shift is not None:
         shown["density"] = exposure.density - shift
     slope = _auto_slope(exposure, process_mode, metrics)
-    if slope is not None:
+    if scan is None and slope is not None:
         shown["grade"] = slope_to_grade(slope, metrics["norm_density_range"], slope_gain(_paper(exposure, process_mode)[0]))
     if exposure.auto_normalize_contrast and metrics.get("highlight_point") is not None:
         shown["highlight_density"] = exposure.highlight_density + auto_highlight_from_metrics(exposure, process_mode, metrics)
@@ -75,7 +104,12 @@ def print_stored_value(
 ) -> float:
     """Inverse of print_shown_values for one field. Where Shadow Reach floors the slope,
     a softer grade is stored but does not print."""
+    exposure = replace(exposure, whites=0.0, blacks=0.0)
+    scan = _scan_shown(exposure, process_mode, metrics)
     if field == "density":
+        if scan is not None:
+            # The levels shift the pivot by a constant, so shown and stored differ by one.
+            return shown + exposure.density - scan["density"]
         shift = _density_shift(exposure, process_mode, metrics)
         return shown if shift is None else shown + shift
     if field == "grade":
@@ -84,7 +118,12 @@ def print_stored_value(
         lum_range = metrics["norm_density_range"]
         r_eff = effective_grade_range(True, lum_range, metrics["textural_range"])
         gain = slope_gain(_paper(exposure, process_mode)[0])
-        return slope_to_grade(grade_to_slope(shown, lum_range, gain), r_eff, gain)
+        target = grade_to_slope(shown, lum_range, gain)
+        if scan is not None:
+            # The levels scale the slope by one factor at every Grade.
+            unplaced = curve_params_from_metrics(exposure, process_mode, {**metrics, "highlight_point": None})[0][1]
+            target *= unplaced / grade_to_slope(scan["grade"], lum_range, gain)
+        return slope_to_grade(target, r_eff, gain)
     if field == "highlight_density" and exposure.auto_normalize_contrast and metrics.get("highlight_point") is not None:
         return shown - auto_highlight_from_metrics(exposure, process_mode, metrics)
     if field == "shadow_density" and exposure.auto_normalize_contrast and metrics.get("shadow_point") is not None:

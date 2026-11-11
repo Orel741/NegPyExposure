@@ -49,7 +49,7 @@ def _render(img: np.ndarray, cast_removal: bool, mode: str = ProcessMode.C41) ->
     strength = 1.0 if cast_removal else 0.0
     cfg = replace(
         cfg,
-        process=replace(cfg.process, analysis_buffer=0.0, process_mode=mode),
+        process=replace(cfg.process, analysis_buffer=0.0, process_mode=mode, color_range_clip=1.0),
         exposure=replace(cfg.exposure, cast_removal_strength=strength),
     )
     ctx = PipelineContext(scale_factor=1.0, original_size=img.shape[:2], process_mode=mode)

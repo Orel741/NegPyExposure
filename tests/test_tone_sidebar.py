@@ -19,8 +19,8 @@ def test_channel_selector_retargets_and_syncs(qapp):
         exposure=replace(
             cfg.exposure,
             grade_trim_red=15.0,
-            shadow_density=-0.45,
-            highlight_density=0.2,
+            shadow_density=-0.2,
+            highlight_density=0.3,
             shadow_grade=-12.0,
             highlight_grade=8.0,
             shadow_grade_trim_red=5.0,
@@ -29,12 +29,11 @@ def test_channel_selector_retargets_and_syncs(qapp):
     )
     sidebar.sync_ui()
 
-    # Global page: shared values, ISO-R grade slider shown.
+    # Global page: shared values. Darks and Lights show a density as its lightening.
     assert sidebar._curve_field("shadow_grade") == "shadow_grade"
-    assert not sidebar.grade_slider.isHidden()
     assert sidebar.grade_trim_slider.isHidden()
-    assert abs(sidebar.shadow_density_slider.value() - (-0.45)) < 1e-9
-    assert abs(sidebar.highlight_density_slider.value() - 0.2) < 1e-9
+    assert abs(sidebar.shadow_density_slider.value() - 50.0) < 1e-9
+    assert abs(sidebar.highlight_density_slider.value() - (-50.0)) < 1e-9
     assert abs(sidebar.shadow_grade_slider.value() - (-12.0)) < 1e-9
     assert abs(sidebar.highlight_grade_slider.value() - 8.0) < 1e-9
     assert sidebar.shadow_density_slider in sidebar._global_only
@@ -54,7 +53,6 @@ def test_channel_selector_retargets_and_syncs(qapp):
 
     assert sidebar._curve_field("shadow_grade") == "shadow_grade_trim_red"
     assert sidebar._curve_field("highlight_grade") == "highlight_grade_trim_red"
-    assert sidebar.grade_slider.isHidden()
     assert not sidebar.grade_trim_slider.isHidden()
     assert sidebar.grade_trim_slider.value() == 15.0
     assert abs(sidebar.shadow_grade_slider.value() - 5.0) < 1e-9
@@ -86,7 +84,6 @@ def test_channel_selector_hidden_in_bw(qapp):
     assert sidebar.ch_btn.isHidden()
     # Forced back to the Global page.
     assert sidebar._channel_index() == 0
-    assert not sidebar.grade_slider.isHidden()
 
 
 def test_auto_density_grade_stay_on_a_raw_slide_and_a_positive(qapp):
@@ -146,35 +143,43 @@ def _metered_sidebar():
     return controller, ToneSidebar(controller)
 
 
-def test_auto_driven_sliders_show_what_prints(qapp):
-    from negpy.desktop.auto_sliders import shown_values
-
+def test_simple_sliders_show_the_distance_from_neutral(qapp):
     controller, sidebar = _metered_sidebar()
+    conf = controller.state.config
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, density=0.8, grade=102.0, whites=0.25, blacks=-0.1))
     sidebar.sync_ui()
-    shown = shown_values(controller.state.config, controller.state.auto_meters["frame"])
 
-    assert sidebar.density_slider.value() == pytest.approx(shown["density"], abs=0.005)
-    assert sidebar.grade_slider.value() == pytest.approx(shown["grade"], abs=0.5)
-    assert sidebar.highlight_density_slider.value() == pytest.approx(shown["highlight_density"], abs=0.005)
-    # The meter's own choice is the default, so an untouched frame reads as unedited.
-    for slider in (sidebar.density_slider, sidebar.grade_slider, sidebar.highlight_density_slider):
+    assert sidebar.density_slider.value() == pytest.approx(40.0)
+    assert sidebar.grade_slider.value() == pytest.approx(20.0)
+    assert sidebar.whites_slider.value() == pytest.approx(25.0)
+    assert sidebar.blacks_slider.value() == pytest.approx(-10.0)
+    # An untouched control reads as unedited, whatever Auto meters.
+    for slider in (sidebar.brightness_slider, sidebar.highlight_density_slider, sidebar.shadow_density_slider):
+        assert slider.value() == 0.0
         assert not slider._edited_dot.isVisibleTo(slider)
 
 
-def test_auto_driven_slider_edit_stores_the_offset(qapp):
-    from negpy.desktop.auto_sliders import stored_value
-
+@pytest.mark.parametrize(
+    "field, position, stored",
+    [
+        ("density", 50.0, 0.75),
+        ("grade", -100.0, 180.0),
+        ("highlight_density", 30.0, -0.18),
+        ("whites", -40.0, -0.4),
+        ("brightness", 10.0, 0.1),
+    ],
+)
+def test_a_simple_slider_edit_stores_the_field_value(qapp, field, position, stored):
     controller, sidebar = _metered_sidebar()
     sidebar.sync_ui()
-    sidebar.density_slider.valueCommitted.emit(1.5)
+    sidebar._driven_sliders()[field].valueCommitted.emit(position)
 
     committed = controller.apply_config.call_args.args[0].exposure
-    expected = stored_value(controller.state.config, controller.state.auto_meters["frame"], "density", 1.5)
-    assert committed.density == pytest.approx(expected)
+    assert getattr(committed, field) == pytest.approx(stored)
     assert committed.auto_exposure
 
 
-def test_reset_on_an_auto_driven_slider_restores_the_neutral_offset(qapp):
+def test_reset_on_a_simple_slider_restores_the_neutral(qapp):
     controller, sidebar = _metered_sidebar()
     conf = controller.state.config
     controller.state.config = replace(conf, exposure=replace(conf.exposure, density=1.3))
@@ -184,22 +189,27 @@ def test_reset_on_an_auto_driven_slider_restores_the_neutral_offset(qapp):
     assert controller.apply_config.call_args.args[0].exposure.density == 1.0
 
 
-def test_auto_toggle_flips_only_the_flag_so_the_slider_drops_the_meter(qapp):
+def test_brightness_shows_only_on_a_scan_stock(qapp):
+    controller, sidebar = _metered_sidebar()
+    sidebar.sync_ui()
+    assert not sidebar.brightness_slider.isHidden()
+
+    conf = controller.state.config
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, paper_profile="neutral"))
+    sidebar.sync_ui()
+    assert sidebar.brightness_slider.isHidden()
+
+
+def test_auto_toggle_flips_only_the_flag(qapp):
     controller, sidebar = _metered_sidebar()
     conf = controller.state.config
     controller.state.config = replace(conf, exposure=replace(conf.exposure, density=1.2))
     sidebar.sync_ui()
-    metered = sidebar.density_slider.value()
 
     sidebar.auto_density_action.setChecked(False)
     off = controller.apply_config.call_args.args[0]
     assert not off.exposure.auto_exposure
     assert off.exposure.density == 1.2
-
-    controller.state.config = off
-    sidebar.sync_ui()
-    assert sidebar.density_slider.value() == pytest.approx(1.2)
-    assert metered != pytest.approx(1.2)
 
 
 def test_both_autos_toggle_together(qapp):
@@ -325,5 +335,16 @@ def test_flat_negative_shows_the_softest_grade_hint(qapp):
     sidebar.sync_ui()
     assert not sidebar.grade_softest_hint.isHidden()
 
-    sidebar.ch_btn.setCurrentIndex(1)
-    assert sidebar.grade_softest_hint.isHidden()
+
+def test_the_tone_profile_writes_its_key_and_waits_on_a_scan_stock(qapp):
+    controller, sidebar = _metered_sidebar()
+    sidebar.sync_ui()
+    assert sidebar.tone_profile_combo.isEnabled()
+    sidebar.tone_profile_combo.setCurrentIndex(sidebar.tone_profile_combo.findData("deep"))
+    assert controller.apply_config.call_args.args[0].exposure.tone_profile == "deep"
+
+    conf = controller.state.config
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, paper_profile="neutral", tone_profile="hard"))
+    sidebar.sync_ui()
+    assert not sidebar.tone_profile_combo.isEnabled()
+    assert sidebar.tone_profile_combo.currentData() == "hard"

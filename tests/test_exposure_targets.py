@@ -110,6 +110,7 @@ class TestRenderCacheInvalidation(TargetsTestCase):
         rng = np.random.default_rng(0)
         img = rng.random((64, 64, 3), dtype=np.float32) * 0.5 + 0.25
         settings = WorkspaceConfig()
+        settings = replace(settings, exposure=replace(settings.exposure, paper_profile="neutral"))
 
         first = engine.process(img, settings, source_hash="targets")
         cached = engine.process(img, settings, source_hash="targets")

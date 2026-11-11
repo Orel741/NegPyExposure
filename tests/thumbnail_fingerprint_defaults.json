@@ -45,7 +45,7 @@
    "midtone_gamma_trim_red": "0.0",
    "paper_black": "false",
    "paper_dmin": "false",
-   "paper_profile": "\"neutral\"",
+   "paper_profile": "\"scan\"",
    "preflash": "0.0",
    "render_intent": "\"print\"",
    "separation_damping": "0.0",
@@ -147,7 +147,7 @@
    "black_point_trim_blue": "0.0",
    "black_point_trim_green": "0.0",
    "black_point_trim_red": "0.0",
-   "color_range_clip": "1.0",
+   "color_range_clip": "20.0",
    "crosstalk_matrix": "null",
    "crosstalk_process": "\"Color Negative\"",
    "crosstalk_profile": "\"Generic C41\"",
@@ -230,5 +230,5 @@
    "vanadium_strength": "0.0"
   }
  },
- "render_version": 35
+ "render_version": 36
 }

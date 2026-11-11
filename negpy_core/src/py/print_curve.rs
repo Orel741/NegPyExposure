@@ -44,7 +44,8 @@ fn plane<'a>(a: &'a PyReadonlyArrayDyn<'_, f32>, h: usize, w: usize) -> PyResult
     use_dye_mix, sep_k3, sep_damping, sep_ref, use_sep_damping, ev_map, ev_scale, use_ev,
     grade_map, use_grade, key_alpha, key_params, use_key, grade_deltas, r0, r_min, r_max, flash,
     flash_v, flash_gamma, flash_map, use_flash, diff_plane, diff_rect, diff_mix, diff_range,
-    use_diff, lut, lut_e_max, lut_black, use_lut, bpc=false, black_hold=0.0
+    use_diff, lut, lut_e_max, lut_black, use_lut, bpc=false, black_hold=0.0,
+    scan_gamma=0.0
 ))]
 fn apply_print_curve<'py>(
     py: Python<'py>,
@@ -111,6 +112,7 @@ fn apply_print_curve<'py>(
     use_lut: bool,
     bpc: bool,
     black_hold: f64,
+    scan_gamma: f64,
 ) -> PyResult<Bound<'py, PyArrayDyn<f32>>> {
     let [h, w, 3] = img.shape()[..] else {
         return Err(PyValueError::new_err("needs an HxWx3 image"));
@@ -223,6 +225,7 @@ fn apply_print_curve<'py>(
         lut,
         bpc,
         black_hold,
+        scan_gamma,
     };
     let out = PyArrayDyn::<f32>::zeros(py, img.shape(), false);
     {

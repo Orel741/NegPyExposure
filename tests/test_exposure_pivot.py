@@ -67,7 +67,7 @@ class TestEndToEndExposure(unittest.TestCase):
         target print density regardless of grade."""
         # paper_black on (BPC off) pinned: BPC remaps the whole tone range around
         # paper Dmax and is orthogonal to the pivot invariant under test here.
-        config = replace(WorkspaceConfig().exposure, paper_black=True)
+        config = replace(WorkspaceConfig().exposure, paper_black=True, paper_profile="neutral")
         ctx = PipelineContext(scale_factor=1.0, original_size=(8, 8), process_mode=ProcessMode.C41)
         ctx.metrics["norm_density_range"] = 1.3
 

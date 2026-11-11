@@ -22,7 +22,7 @@ from negpy.features.exposure.papers import (
     resolve_paper,
     resolve_print_color,
 )
-from negpy.features.exposure.print_lut import DyeLut
+from negpy.features.exposure.print_lut import DyeLut, DyeMatrix
 from negpy.features.process.chart import delta_e2000
 from negpy.features.process.models import ProcessMode
 from negpy.infrastructure.display.color_spaces import WORKING_COLOR_SPACE, ColorSpaceRegistry
@@ -83,8 +83,8 @@ class TestPaperProfiles(unittest.TestCase):
             self.assertEqual(c[k], EXPOSURE_CONSTANTS[k])
 
     def test_config_default_resolves(self):
-        # A fresh config (and an old save without the key) lands on the default.
-        self.assertEqual(ExposureConfig().paper_profile, DEFAULT_PROFILE_KEY)
+        # A fresh config (and an old save without the key) lands on the scan stock.
+        self.assertEqual(ExposureConfig().paper_profile, "scan")
 
     def test_unknown_key_falls_back(self):
         self.assertIs(resolve_paper("does-not-exist"), PAPER_PROFILES[DEFAULT_PROFILE_KEY])
@@ -133,7 +133,9 @@ class TestPaperProfiles(unittest.TestCase):
     def test_color_stocks_are_luts(self):
         for key, p in PAPER_PROFILES.items():
             with self.subTest(key):
-                if p.kind == "ra4":
+                if p.scan:
+                    self.assertIsInstance(p.print_color, DyeMatrix)
+                elif p.kind == "ra4":
                     self.assertIsInstance(p.print_color, DyeLut)
                 else:
                     self.assertEqual(resolve_print_color(p), (None, None))

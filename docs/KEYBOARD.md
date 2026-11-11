@@ -99,8 +99,8 @@ Actions with no default key are not listed; every one of them can still be bound
 | `E` / `D` | Increase / decrease **Magenta** (default step 0.01) |
 | `R` / `F` | Increase / decrease **Yellow** (default step 0.01) |
 | `T` / `G` | Increase / decrease **Temperature** (default step 50 K) |
-| `Q` / `A` | Increase / decrease **Print Density** (default step 0.01) |
-| `W` / `S` | Increase / decrease **ISO-R Grade** (default step 10 ISO-R) |
+| `Q` / `A` | Increase / decrease **Exposure** (default step 1) |
+| `W` / `S` | Increase / decrease **Contrast** (default step 10) |
 | `Alt + T` / `Alt + Shift + T` | Increase / decrease **Toe** (default step 0.01) |
 | `Alt + Y` / `Alt + Shift + Y` | Increase / decrease **Toe Width** (default step 0.01) |
 | `Alt + U` / `Alt + Shift + U` | Increase / decrease **Shoulder** (default step 0.01) |

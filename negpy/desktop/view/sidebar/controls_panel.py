@@ -690,13 +690,13 @@ class ControlsPanel(QWidget):
         )
         exp.density_slider.setToolTip(
             tooltip_with_shortcut(
-                tr("How light or dark the print is, where lower is lighter."),
+                tr("How light or dark the picture is, where higher is lighter."),
                 ["density_up", "density_down"],
             )
         )
         exp.grade_slider.setToolTip(
             tooltip_with_shortcut(
-                tr("Contrast: a lower number gives more contrast, and about 110 is a normal print."),
+                tr("The difference between dark and light tones, where higher gives more contrast."),
                 ["grade_up", "grade_down"],
             )
         )
@@ -732,13 +732,13 @@ class ControlsPanel(QWidget):
         )
         exp.shadow_density_slider.setToolTip(
             tooltip_with_shortcut(
-                tr("Darkens (positive) or lightens (negative) only the shadows, and Auto Grade can set it too."),
+                tr("Lightens (positive) or darkens (negative) only the shadows."),
                 ["shadow_density_inc", "shadow_density_dec"],
             )
         )
         exp.highlight_density_slider.setToolTip(
             tooltip_with_shortcut(
-                tr("Darkens (positive) or lightens (negative) only the highlights, and Auto Grade can set it too."),
+                tr("Lightens (positive) or darkens (negative) only the highlights."),
                 ["highlight_density_inc", "highlight_density_dec"],
             )
         )

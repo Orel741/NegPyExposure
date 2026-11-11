@@ -56,7 +56,8 @@ pub struct Lut<'a> {
 /// `grade` a slope factor per pixel. `keys` are tone-limited masks whose ISO-R grade adds to
 /// their deltas about `r0` and replaces `grade`. `flash` is preflash as a fraction of the
 /// threshold exposure. `bpc` maps paper black (or the LUT's `black`) to display black. `lut`
-/// replaces 10^-D on the density above base.
+/// replaces 10^-D on the density above base. A `scan_gamma` above 0 replaces 10^-D with
+/// ((d_max - D) / d_max)^scan_gamma, a display code linear in density; a LUT ignores it.
 #[derive(Clone, Copy)]
 pub struct PrintCurve<'a> {
     pub pivots: [f32; 3],
@@ -105,6 +106,7 @@ pub struct PrintCurve<'a> {
     pub lut: Option<Lut<'a>>,
     pub bpc: bool,
     pub black_hold: f64,
+    pub scan_gamma: f64,
 }
 
 /// The per-channel bounds the kernel's prologue derives.
@@ -472,6 +474,13 @@ fn run(
     } else {
         for c in 0..3 {
             let (black, bpc) = (b.bpc_black[c], p.bpc);
+            if p.scan_gamma > 0.0 {
+                for i in 0..n {
+                    let z = ((p.d_max - dens[c][i]) / p.d_max).clamp(0.0, 1.0);
+                    out[i][c] = pow_f64(z, p.scan_gamma) as f32;
+                }
+                continue;
+            }
             for i in 0..n {
                 let t = exp10_f64(-dens[c][i]);
                 let t = if bpc { (t - black) / (1.0 - black) } else { t };

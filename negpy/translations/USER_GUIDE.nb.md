@@ -51,7 +51,7 @@ Et vanlig ord samsvarer med filnavnet. `field:value`-uttrykk samsvarer med bilde
 
 Uttrykk kan kombineres: `film:portra iso:>=400 -rejected:`. Metadatauttrykk samsvarer bare med bilder der du har fylt ut metadataene. **Søk etter betydning** (slå det på i Innstillinger → Ytelse) finner bilder etter en beskrivelse, for eksempel "en hund på en strand".
 
-<!-- panel:analysis src:7afa1351 -->
+<!-- panel:analysis src:19903f64 -->
 ## 3. Analyseavlesning
 
 Denne avlesningen beskriver det gjeldende bildet mens du redigerer.
@@ -75,7 +75,7 @@ Trekanter i de øvre hjørnene advarer når skygger blir helt svarte (venstre) e
 
 **Gråkilen** kopierer 21 grå trinn; trinn som smelter sammen i svart eller hvitt, er tapte toner. **Sonestripen** viser hvor mye av bildet som havner i hver sone, fra 0 (svart) gjennom V (mellomgrå) til X (hvit). Dobbeltklikk den (eller trykk `Shift+Z`) for **soneoverlegget**, som farger bildet etter sone.
 
-Klikk en sone på stripen, og så et punkt på bildet, så angir NegPy kopien slik at punktet kopieres i den sonen. Én nål angir Kopitetthet; en andre angir også ISO-R-gradering. **Plasser soner** (eller Enter) bruker resultatet; `Esc` avbryter.
+Klikk en sone på stripen, og så et punkt på bildet, så angir NegPy kopien slik at punktet kopieres i den sonen. Én nål angir Eksponering; en andre angir også Kontrast. **Plasser soner** (eller Enter) bruker resultatet; `Esc` avbryter.
 
 #### Avlesninger
 
@@ -132,34 +132,37 @@ Korrigerer fargen i kopien, slik fargefiltrene i et forstørrelsesapparat i mør
 *   **Fjerning av fargestikk**: fjerner et fargestikk som er ulikt i de mørke og lyse delene av bildet. Den starter på 0,5 (halvparten) for fargenegativer og på 0 for dias. Blader, himmel og vann regnes ikke som grått, så de beholder fargen.
 *   **Filter**: et farget filter, som på kameraobjektivet for svart-hvitt-film. Det vises bare for et fargenegativ eller fargedias i S/H, og erstatter kontrollene ovenfor. Hvert filter gjør fargene motsatt av sin egen mørkere. Gul #8, Dyp gul #15, Oransje #21 og Rød #25 gjør en blå himmel mørkere, trinn for trinn. Rød gjør også blader mørke og hud blek. Gulgrønn #11 og Grønn #58 gjør blader lysere og hud mørkere. Ingen gir utseendet til en vanlig svart-hvitt-film.
 
-<!-- panel:tone src:773012ec -->
+<!-- panel:tone src:0caf4259 -->
 ### 5.2 Tone: lyshet og kontrast
 
-Hvor lys eller mørk kopien er, og hvor mye kontrast den har.
+Hvor lyst eller mørkt bildet er, og hvor mye kontrast det har. Hver glidebryter starter på 0, og et dobbeltklikk setter den tilbake.
 
-*   **Kopitetthet**: hvor lys eller mørk kopien er (eksponeringstiden i mørkerommet). Lavere er lysere.
-*   **ISO-R-gradering**: kontrast (papirgraderingen i mørkerommet). Et lavere tall gir mer kontrast; omtrent 110 er normalt.
-*   **Auto** (tryllestaven, også på linjen i fanen Eksponering): **Autotetthet** og **Autogradering** angir lyshet og kontrast for hvert bilde, så en rull kopieres jevnt. En glidebryter viser da den automatiske verdien: flytt den for å justere, og dobbeltklikk den for å gå tilbake. Høyreklikk tryllestaven for å slå begge på eller av. Auto-menyen har også:
+*   **Toneprofil** (bare med papiret Digital (Scan)): utgangsuttrykket. **Standard** er standarden. **Myk** og **Hard** har mindre og mer kontrast. **Lineær** klipper ingenting ved svart eller hvitt. **Flat** har lav kontrast, som utgangspunkt for din egen redigering. **Dyp** har mørke skygger.
+*   **Eksponering**: hvor lyst eller mørkt bildet er. Høyere er lysere.
+*   **Lysstyrke** (bare med papiret Digital (Scan)): gjør mellomtonene lysere eller mørkere. Svart og hvitt blir der de er.
+*   **Kontrast**: forskjellen mellom mørke og lyse toner. Høyere gir mer kontrast.
+*   **Lyse toner** / **Mørke toner**: gjør bare høylysene eller bare skyggene lysere (positiv) eller mørkere (negativ).
+*   **Hvitt** / **Svart**: flytter hvitpunktet eller svartpunktet. Positiv Hvitt gjør de lyseste tonene lysere. Negativ Svart gjør de mørkeste tonene dypere.
+*   **Auto** (tryllestaven, også på linjen i fanen Eksponering): **Autotetthet** og **Autogradering** angir lyshet og kontrast for hvert bilde, så en rull kopieres jevnt. Glidebryterne justerer da fra de automatiske verdiene. Høyreklikk tryllestaven for å slå begge på eller av. Auto-menyen har også:
     *   **Angi mål…**: lysheten og kontrasten Auto sikter mot.
     *   **Bak inn autotetthet/-gradering**: beholder de automatiske verdiene for dette bildet og slår av Auto for det.
     *   **Hold svart**: når du gjør skyggene lysere, forblir de dypeste svarttonene svarte.
 *   **Prøvestripe** (`Shift+T`): et rutenett av versjoner med ulik lyshet og kontrast. Klikk den du liker. `Esc` lukker den.
-*   **Skyggetetthet** / **Høylystetthet** (folden under Kopitetthet): gjør bare skyggene eller høylysene mørkere eller lysere.
-*   **Skyggegradering** / **Høylysgradering** (folden under ISO-R-gradering): kontrast bare i skyggene eller høylysene.
-*   **Kopieringshjelpemidler** (fold):
+*   **Avansert** (fold): mørkeromskontrollene.
+    *   **Global / R / G / B**: R, G eller B bruker graderingene på bare én farge, for et fargestikk som er ulikt i skygger og høylys.
+    *   **Skyggegradering** / **Høylysgradering**: kontrast bare i skyggene eller høylysene.
     *   **Forbelysning**: henter tilbake detaljer i de lyseste områdene.
     *   **Diffusjon**: en myk glød; mørke områder sprer seg inn i lyse.
-    *   **Kontrastmaske**: åpner store mørke områder og holder tilbake store lyse, og beholder fine detaljer. I mørkerommet får en kopist dette med en myk, uskarp maske lagt på negativet. I digital kopiering får Fujifilm Frontier-skannere en lignende virkning med HyperTone. Områder langt fra mellomgrå endres mest, så et bilde med lav kontrast endres lite.
-*   **Global / R / G / B**: R, G eller B bruker graderingene på bare én farge, for et fargestikk som er ulikt i skygger og høylys.
+    *   **Kontrastmaske**: åpner store mørke områder og holder tilbake store lyse, og beholder fine detaljer. I digital kopiering får Fujifilm Frontier-skannere en lignende virkning med HyperTone.
 
 **Hvitpunkt** og **Svartpunkt** er på kortet **Lysmåling** i fanen Rull ([§10.6](#106-metering-negative--positive)).
 
-<!-- panel:paper src:00cfca5d -->
+<!-- panel:paper src:68d214d6 -->
 ### 5.3 Papirrespons: papiret
 
 Papiret bildet kopieres på, og hvordan det gjør lys om til toner fra svart til hvitt.
 
-*   **Kopipapir**: papiret. Et ekte papir angir kontrastkurven og fargene ut fra produsentens data. **Digital (Adobe RGB)**, standarden, er et ideelt papir. **Digital (Pakon)** har fargene til en Pakon-laboratorieskanner. **Digital (Frontier)** har fargene og kontrastkurven til en laboratorieskanning fra Fujifilm Frontier.
+*   **Kopipapir**: papiret. Et ekte papir angir kontrastkurven og fargene ut fra produsentens data. **Digital (Scan)**, standarden, gjengir bildet slik en filmskanner gjør, med rent svart og lyse høylys. **Digital (Adobe RGB)** er et ideelt papir. **Digital (Pakon)** har fargene til en Pakon-laboratorieskanner. **Digital (Frontier)** har fargene og kontrastkurven til en laboratorieskanning fra Fujifilm Frontier.
 *   **Prøvestripe for papir** (den stripete knappen): kopierer bildet på hvert papir. Klikk et papir for å se det stort, bla med piltastene, og trykk **Behold** for å bruke det.
 *   **Fargestoffseparasjon**: fargestyrke i kopien. 1 er uendret. **Separasjonsdemping** legger mer av endringen på matte farger og mindre på sterke. **Kroma** i fanen Utseende endrer i stedet alle farger likt.
 *   **Papirhvitt**: viser hvitfargen til ekte papir, litt mørkere enn rent hvitt.
@@ -375,7 +378,7 @@ Gir et falmet dias fargelagene tilbake. Kortet vises bare for dias.
 *   **Gråmiks**: endrer hvilke grå toner Beregn stoler på. Dra den hvis fargene ser feil ut.
 *   **Crossover**: fjerner en fargeforskyvning mellom skygger og høylys. Still den inn på et bilde med tydelige gråtoner, og klikk så **Rull** på kortet.
 
-<!-- panel:process src:2c179de9 -->
+<!-- panel:process src:60925755 -->
 ### 10.6 Lysmåling: negativ → positiv
 
 For å gjøre et negativ om til et positiv måler NegPy de mørkeste og lyseste delene (svart- og hvitpunktet) og fargen på filmen. Disse kontrollene angir hva den måler.
@@ -390,7 +393,7 @@ For å gjøre et negativ om til et positiv måler NegPy de mørkeste og lyseste 
 *   **Dmin** / **Dmax** (folden Velg selv): for et bilde som NegPy måler dårlig. Klikk **Dmin**, og så filmbasen eller den dypeste skyggen, for å angi svartpunktet. Klikk **Dmax**, og så det lyseste høylyset, for å angi hvitpunktet. Hver **×** fjerner sitt eget punkt. Begge er av mens bildet kopieres etter rullens gjennomsnitt.
 *   **Hvitpunkt** / **Svartpunkt** (fold): flytter det målte hvit- og svartpunktet. Et positivt hvitpunkt gjør kopien lysere; et positivt svartpunkt løfter svarttonene. **R / G / B** flytter bare én farge.
 
-Et **dias** trenger ingen invertering: tonekontrollene former bildet direkte. Autotetthet og autogradering starter av; slå dem på for et falmet dias. På et dias angir Tegn område området som Beregn, Fjern flekk, Fjerning av fargestikk, Autotetthet og Autogradering måler. Tegn det før du klikker Beregn. Med Lightroom-begreper er Eksponering lik Kopitetthet (lavere er lysere), Kontrast lik ISO-R-gradering, og Skygger og Høylys lik Skyggetetthet og Høylystetthet.
+Et **dias** trenger ingen invertering: tonekontrollene former bildet direkte. Autotetthet og autogradering starter av; slå dem på for et falmet dias. På et dias angir Tegn område området som Beregn, Fjern flekk, Fjerning av fargestikk, Autotetthet og Autogradering måler. Tegn det før du klikker Beregn.
 
 <!-- panel:baseline src:7fc2c469 -->
 ### 10.7 Rullanalyse

@@ -4,10 +4,13 @@ from typing import TYPE_CHECKING, Optional
 
 from negpy.domain.migrations import CROSSTALK_PROFILE_RENAMES
 from negpy.kernel.system.i18n import mark
-from negpy.features.exposure.models import EXPOSURE_CONSTANTS, ExposureConfig
+from negpy.features.exposure.models import ExposureConfig
 
 if TYPE_CHECKING:
     from negpy.domain.models import WorkspaceConfig
+
+# Deep enough that a colored cast in the deepest shadows reads as film cast.
+DEFAULT_COLOR_CLIP = 20.0
 
 
 class ProcessMode(StrEnum):
@@ -202,7 +205,7 @@ class ProcessConfig:
     # Two normalization clip axes: luma sets the black/white-point span, color sets
     # the per-channel balance clip (orange-mask cast removal).
     luma_range_clip: float = 0.0
-    color_range_clip: float = float(EXPOSURE_CONSTANTS["base_color_clip"])
+    color_range_clip: float = DEFAULT_COLOR_CLIP
     # Roll-wide baseline applied independently per axis: luma (span) and color (cast).
     use_luma_average: bool = False
     use_color_average: bool = False
@@ -418,15 +421,15 @@ def with_source_encoding(config: "WorkspaceConfig", encoding: str) -> "Workspace
 
 
 # The print stocks the scanning-setup wizard picks between; a frame on any other stock keeps it.
-SCAN_SETUP_PAPERS = ("neutral", "pakon")
+SCAN_SETUP_PAPERS = ("neutral", "scan", "pakon")
 
 
 def scan_setup_values(capture: str, light: str) -> tuple[bool, str]:
     """(linear_raw, paper_profile) for a scanning rig — capture is "auto"/"camera"/"scanner", light
     is "white"/"narrowband". A camera under white light is the only combination that wants the
     as-shot-WB decode; Auto decodes as a camera, since a scanner's TIFF takes no RAW decode.
-    Narrowband light prints on the Pakon minilab stock, white light on Digital."""
-    return capture == "scanner" or light != "white", "pakon" if light == "narrowband" else "neutral"
+    Narrowband light prints on the Pakon minilab stock, white light on Digital (Scan)."""
+    return capture == "scanner" or light != "white", "pakon" if light == "narrowband" else "scan"
 
 
 def scan_setup_rig(saved) -> tuple[str, str]:

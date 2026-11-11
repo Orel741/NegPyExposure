@@ -8,6 +8,7 @@ from negpy.desktop.view.sidebar.controls_panel import ControlsPanel
 from negpy.domain.models import WorkspaceConfig
 from negpy.features.exposure.models import EXPOSURE_CONSTANTS
 from negpy.kernel.system.config import DEFAULT_WORKSPACE_CONFIG
+from negpy.desktop.view.sidebar.tone import simple_stored
 
 
 def test_a_fresh_session_starts_on_the_shipped_config():
@@ -33,10 +34,11 @@ def panel(qapp):
 
 
 def test_sliders_double_click_to_the_value_their_card_resets_to(panel):
-    assert panel.tone_sidebar.grade_slider._default == DEFAULT_WORKSPACE_CONFIG.exposure.grade
+    assert simple_stored("grade", panel.tone_sidebar.grade_slider._default) == DEFAULT_WORKSPACE_CONFIG.exposure.grade
     assert panel.sensor_sidebar.crosstalk_strength_slider._default == DEFAULT_WORKSPACE_CONFIG.process.crosstalk_strength
 
 
 def test_the_grade_slider_travels_exactly_the_curves_own_clamp(panel):
     slider = panel.tone_sidebar.grade_slider
-    assert (slider._min, slider._max) == (EXPOSURE_CONSTANTS["iso_r_min"], EXPOSURE_CONSTANTS["iso_r_max"])
+    ends = (simple_stored("grade", slider._max), simple_stored("grade", slider._min))
+    assert ends == (EXPOSURE_CONSTANTS["iso_r_min"], EXPOSURE_CONSTANTS["iso_r_max"])

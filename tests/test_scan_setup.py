@@ -20,13 +20,13 @@ if not QApplication.instance():
 
 class TestScanSetupValues(unittest.TestCase):
     def test_camera_white_light_is_the_only_as_shot_wb_decode(self):
-        self.assertEqual(scan_setup_values("camera", "white"), (False, "neutral"))
+        self.assertEqual(scan_setup_values("camera", "white"), (False, "scan"))
 
     def test_camera_narrowband(self):
         self.assertEqual(scan_setup_values("camera", "narrowband"), (True, "pakon"))
 
     def test_scanner_white_light(self):
-        self.assertEqual(scan_setup_values("scanner", "white"), (True, "neutral"))
+        self.assertEqual(scan_setup_values("scanner", "white"), (True, "scan"))
 
     def test_scanner_narrowband(self):
         self.assertEqual(scan_setup_values("scanner", "narrowband"), (True, "pakon"))
@@ -34,7 +34,7 @@ class TestScanSetupValues(unittest.TestCase):
 
 class TestScanSetupRig(unittest.TestCase):
     def test_auto_decodes_as_a_camera(self):
-        self.assertEqual(scan_setup_values("auto", "white"), (False, "neutral"))
+        self.assertEqual(scan_setup_values("auto", "white"), (False, "scan"))
         self.assertEqual(scan_setup_values("auto", "narrowband"), (True, "pakon"))
 
     def test_nothing_saved_reads_auto_under_white_light(self):
@@ -110,7 +110,7 @@ class TestScanSetupCard(unittest.TestCase):
         card = ScanSetupSidebar(_setup_controller({"capture": "scanner", "light": "white"}))
         card.sync_ui()
         text = card.hint.text()
-        for words in ("Epson", "Reads the scan linear", "Hides the Raw Decode", "Digital (Adobe RGB)"):
+        for words in ("Epson", "Reads the scan linear", "Hides the Raw Decode", "Digital (Scan)"):
             self.assertIn(words, text)
 
     def test_the_stock_line_follows_where_the_setup_moves_the_stock(self):
@@ -286,7 +286,7 @@ class TestApplyScanSetup(unittest.TestCase):
 
     def test_narrowband_prints_the_open_frame_on_pakon_and_white_light_on_digital(self):
         self.assertEqual(self._open_frame_paper("narrowband"), "pakon")
-        self.assertEqual(self._open_frame_paper("white", paper="pakon"), "neutral")
+        self.assertEqual(self._open_frame_paper("white", paper="pakon"), "scan")
 
     def test_another_stock_or_film_mode_keeps_its_paper(self):
         self.assertEqual(self._open_frame_paper("narrowband", paper="kodak_supra_endura"), "kodak_supra_endura")

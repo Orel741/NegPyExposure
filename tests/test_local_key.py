@@ -116,7 +116,9 @@ class TestEndToEnd:
         return np.ascontiguousarray(np.stack([img, img * 0.95, img * 0.9], axis=-1))
 
     def _render(self, masks, tag: str) -> np.ndarray:
-        cfg = WorkspaceConfig(local=LocalAdjustmentsConfig(masks=masks), lab=LabConfig(sharpen=0.0))
+        cfg = WorkspaceConfig(
+            local=LocalAdjustmentsConfig(masks=masks), lab=LabConfig(sharpen=0.0), exposure=ExposureConfig(paper_profile="neutral")
+        )
         return np.asarray(DarkroomEngine().process(self._frame(), cfg, source_hash=f"local-key-{tag}"))
 
     def test_the_burn_stops_at_the_zone(self):

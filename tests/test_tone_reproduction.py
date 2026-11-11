@@ -1,6 +1,7 @@
 import csv
 import os
 import unittest
+from dataclasses import replace
 
 import numpy as np
 
@@ -65,6 +66,7 @@ def _print_densities(spread: float) -> tuple[np.ndarray, np.ndarray, float, floa
     scene, deepest, brightest = _scene_densities(spread)
     img = _negative_scan(scene)
     config = WorkspaceConfig()
+    config = replace(config, exposure=replace(config.exposure, paper_profile="neutral"))
     ctx = PipelineContext(scale_factor=1.0, original_size=img.shape[:2], process_mode=ProcessMode.C41)
     norm = NormalizationProcessor(config.process).process(img, ctx)
     out = PhotometricProcessor(config.exposure).process(norm, ctx)

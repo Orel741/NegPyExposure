@@ -60,6 +60,14 @@ class ExposureConfig:
     # Ranges are asymmetric: density is log10, so an equal ΔD reads smaller near d_max.
     shadow_density: float = 0.0
     highlight_density: float = 0.0
+    # Levels on the print, -1 to 1: positive Whites brightens the light end and holds black,
+    # positive Blacks lifts the dark end and holds white (levels_trim).
+    whites: float = 0.0
+    blacks: float = 0.0
+    # Midtone brightness of a scan profile, -1 to 1; the ends hold (papers.scan_gamma).
+    brightness: float = 0.0
+    # A scan profile's starting look: a key of TONE_PROFILES.
+    tone_profile: str = "standard"
     # A shadow lift fades to nothing at paper black, so the black point barely moves.
     hold_black: bool = False
     # Tone mask: lifts large dark areas and holds back large bright ones, more the farther they sit
@@ -112,7 +120,7 @@ class ExposureConfig:
     auto_exposure: bool = True
     auto_normalize_contrast: bool = True
     render_intent: str = RenderIntent.PRINT
-    paper_profile: str = "neutral"
+    paper_profile: str = "scan"
     # Density-domain saturation, composed into the dye_mix kernel slot (see
     # papers.py: resolve_saturation_matrix). 1.0 = identity; trims are per-layer.
     dye_separation: float = 1.0
@@ -294,6 +302,18 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     "shadow_hold_strength": 0.40,
     "shadow_hold_overshoot": 0.15,
     "shadow_hold_max": 0.3,
+    # A scan profile's Auto levels: the code, as a fraction of the range, that the textured
+    # dark tail (shadow_reach_percentile) and bright tail (highlight_hold_percentile) print at.
+    # Outside 0 to 1 clips: the tail prints past black or white.
+    "scan_black_level": -0.05,
+    "scan_white_level": 1.15,
+    # The code, as a fraction of the range, that a scan profile's Grade turns about.
+    "scan_contrast_pivot": 0.45,
+    # Whites and Blacks at full travel move their end by this fraction of the code range.
+    "levels_white_span": 0.3,
+    "levels_black_span": 0.15,
+    # Brightness at full travel scales the scan exponent by 2 to this power.
+    "scan_brightness_stops": 0.8,
     # Preflash threshold: the density above paper white that the ISO R range starts at.
     "preflash_threshold_density": 0.04,
     # Flat / digital-intermediate master (RenderIntent.FLAT). A log-video master:
@@ -319,6 +339,23 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # the picture. Inlined as a WGSL literal: change both.
     "separation_damping_ref_spread": 0.35,
 }
+
+# A scan profile's starting looks: (black level, white level, Brightness offset, contrast gain).
+# The levels replace scan_black_level and scan_white_level, and the gain scales density about
+# scan_contrast_pivot. An unknown key reads as "standard".
+TONE_PROFILES: Dict[str, Tuple[float, float, float, float]] = {
+    "standard": (float(EXPOSURE_CONSTANTS["scan_black_level"]), float(EXPOSURE_CONSTANTS["scan_white_level"]), 0.0, 1.0),
+    "soft": (0.0, 1.10, 0.1, 0.85),
+    "hard": (-0.08, 1.20, 0.0, 1.2),
+    "linear": (0.0, 1.0, 0.0, 1.0),
+    "flat": (0.02, 1.0, 0.15, 0.8),
+    "deep": (-0.10, 1.15, -0.2, 1.1),
+}
+
+
+def tone_profile_values(key: str) -> Tuple[float, float, float, float]:
+    return TONE_PROFILES.get(key, TONE_PROFILES["standard"])
+
 
 # Auto Density / Auto Grade targets the user can retune (Set Targets dialog).
 # App-global, not per-image: one calibration per install. key -> (min, max).

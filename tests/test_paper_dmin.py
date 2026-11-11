@@ -12,7 +12,7 @@ from negpy.features.process.models import ProcessMode
 
 class TestPaperDmin(unittest.TestCase):
     def setUp(self):
-        self.config = WorkspaceConfig().exposure
+        self.config = replace(WorkspaceConfig().exposure, paper_profile="neutral")
 
     def _run(self, value: float, paper_dmin: bool) -> float:
         ctx = PipelineContext(scale_factor=1.0, original_size=(8, 8), process_mode=ProcessMode.C41)

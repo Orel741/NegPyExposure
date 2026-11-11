@@ -11,6 +11,7 @@ from negpy.features.exposure.papers import (
     effective_constants,
     resolve_print_color,
     resolve_saturation_matrix,
+    scan_gamma,
     slope_gain,
 )
 from negpy.features.exposure.print_lut import lut_black_luminance
@@ -95,6 +96,8 @@ class CharacteristicCurve:
         preflash: float = 0.0,
         grade: float = 115.0,
         black_hold: float = 0.0,
+        brightness: float = 0.0,
+        tone_profile: str = "standard",
     ):
         c = effective_constants(paper)
         ts = float(c["toe_shoulder_strength"])
@@ -116,6 +119,7 @@ class CharacteristicCurve:
         self.shadow_grade_delta = float(shadow_grade_delta)
         self.highlight_grade_delta = float(highlight_grade_delta)
         self.d_max = float(c["d_max"])
+        self.scan_gamma = scan_gamma(paper, brightness, tone_profile)
         # The BPC reference mirrors the kernel prologue: achromatic, d_min for the tint.
         self.bpc = bool(bpc)
         db = self.d_max
@@ -164,6 +168,11 @@ class CharacteristicCurve:
             v = v + self.shadow_density * w_zsh + self.highlight_density * w_zhi
         v1 = self.d_min_eff + np.logaddexp(0.0, self.a_hl * (v - self.d_min_eff)) / self.a_hl
         res = self.d_max_eff - np.logaddexp(0.0, self.a_sh * (self.d_max_eff - v1)) / self.a_sh
+
+        if self.scan_gamma > 0.0:
+            # The density a paper would need for the scan transfer's code.
+            z = np.clip((self.d_max - res) / self.d_max, 0.0, 1.0)
+            return ensure_image(-self.scan_gamma * np.log10(np.maximum(z, 1e-12)))
 
         if self.bpc:
             t = 10.0 ** (-res)
@@ -227,6 +236,8 @@ def print_curve(
         preflash=exposure.preflash,
         grade=exposure.grade,
         black_hold=black_hold_taper(exposure, profile),
+        brightness=exposure.brightness,
+        tone_profile=exposure.tone_profile,
     )
 
 
@@ -273,6 +284,9 @@ def curve_params_from_metrics(
         grade_trims=(exposure.grade_trim_red, exposure.grade_trim_green, exposure.grade_trim_blue),
         shadow_point=metrics.get("shadow_point"),
         midtone_gamma=effective_midtone_gamma(profile, exposure.midtone_gamma),
+        highlight_point=metrics.get("highlight_point"),
+        levels=(exposure.whites, exposure.blacks),
+        tone_profile=exposure.tone_profile,
     )
 
 
@@ -388,6 +402,8 @@ def apply_characteristic_curve(
     diffusion_rect: Optional[Tuple[float, float, float, float]] = None,
     diffusion_range: Tuple[float, float, float] = (1.0, 1.0, 1.0),
     black_hold: float = 0.0,
+    brightness: float = 0.0,
+    tone_profile: str = "standard",
 ) -> ImageBuffer:
     """Applies the asymmetric H&D print curve per channel in log-density space.
 
@@ -518,6 +534,7 @@ def apply_characteristic_curve(
         use_lut=lut is not None,
         bpc=bool(bpc),
         black_hold=float(black_hold),
+        scan_gamma=scan_gamma(paper, brightness, tone_profile) if lut is None else 0.0,
     )
     return ensure_image(res)
 
@@ -1028,6 +1045,9 @@ def auto_base_slope(
     return slope
 
 
+CurveParams = Tuple[Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]]
+
+
 def per_channel_curve_params(
     grade: float,
     density: float,
@@ -1042,10 +1062,127 @@ def per_channel_curve_params(
     grade_trims: Tuple[float, float, float] = (0.0, 0.0, 0.0),
     shadow_point: Optional[float] = None,
     midtone_gamma: Optional[float] = None,
-) -> Tuple[Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]]:
+    highlight_point: Optional[float] = None,
+    levels: Tuple[float, float] = (0.0, 0.0),
+    tone_profile: str = "standard",
+) -> CurveParams:
     """
     Per-channel (slopes, pivots, curvatures); single source of truth for CPU/GPU/chart.
     Core: v = slope*(u - pivot) + curv*u² (curv 0 = a straight line).
+
+    A scan profile under both Autos places the frame by its levels (scan_levels); Grade and
+    Density then act about that placement, and the tone profile sets the levels and a
+    contrast gain. `levels` is (Whites, Blacks), applied last.
+    """
+    args = (auto_normalize_contrast, strength, lum_range, textural_range, d_min, anchor, paper, neutral_axis_norm)
+    params = _paper_curve_params(grade, density, *args, grade_trims, shadow_point, midtone_gamma)
+    from negpy.features.exposure.models import tone_profile_values
+
+    c = effective_constants(paper)
+    profile = tone_profile_values(tone_profile)
+    placed = paper is not None and paper.scan and auto_normalize_contrast and anchor is not None
+    if placed and shadow_point is not None and highlight_point is not None:
+        from negpy.features.exposure.models import ExposureConfig
+
+        neutral = ExposureConfig()
+        ref = _paper_curve_params(neutral.grade, neutral.density, *args, (0.0, 0.0, 0.0), shadow_point, midtone_gamma)
+        place = (ref[0][1], ref[1][1], shadow_point, highlight_point, c, profile[:2])
+        params = scan_levels(params, *place)
+        if grade != neutral.grade:
+            graded = _paper_curve_params(grade, neutral.density, *args, (0.0, 0.0, 0.0), shadow_point, midtone_gamma)
+            params = _rescaled(params, 1.0, -scan_grade_drift(scan_levels(ref, *place), scan_levels(graded, *place), c))
+    if paper is not None and paper.scan:
+        gain = profile[3]
+        turn = float(c["d_max"]) * (1.0 - float(c["scan_contrast_pivot"]))
+        params = _rescaled(params, gain, turn * (1.0 - gain)) if gain != 1.0 else params
+    return levels_trim(params, levels[0], levels[1], c)
+
+
+def _rescaled(params: CurveParams, gain: float, shift: float) -> CurveParams:
+    """`params` with every channel's density multiplied by `gain`, then moved by `shift`."""
+    slopes, pivots, curvs = params
+    out_slopes = tuple(float(k) * gain for k in slopes)
+    out_pivots = tuple(float(p) - shift / k for p, k in zip(pivots, out_slopes))
+    out_curvs = tuple(float(q) * gain for q in curvs)
+    return (
+        (out_slopes[0], out_slopes[1], out_slopes[2]),
+        (out_pivots[0], out_pivots[1], out_pivots[2]),
+        (out_curvs[0], out_curvs[1], out_curvs[2]),
+    )
+
+
+def _green_density(params: CurveParams, val: float) -> float:
+    slopes, pivots, curvs = params
+    return slopes[1] * (val - pivots[1]) + curvs[1] * val * val
+
+
+def scan_grade_drift(reference: CurveParams, graded: CurveParams, c: Dict[str, Any]) -> float:
+    """Density by which a Grade change moves the tone that the reference prints at
+    scan_contrast_pivot. Without it the Grade turns about the paper's pivot, a light tone
+    on a scan profile."""
+    target = float(c["d_max"]) * (1.0 - float(c["scan_contrast_pivot"]))
+    k, p, q = reference[0][1], reference[1][1], reference[2][1]
+    if abs(q) < 1e-9:
+        val = p + target / k
+    else:
+        disc = max(k * k + 4.0 * q * (k * p + target), 0.0)
+        val = (-k + disc**0.5) / (2.0 * q)
+    return _green_density(graded, val) - target
+
+
+def levels_trim(params: CurveParams, whites: float, blacks: float, c: Dict[str, Any]) -> CurveParams:
+    """`params` with the code range remapped: Whites moves the white end and holds black,
+    Blacks moves the black end and holds white. Code is the density headroom below d_max."""
+    if whites == 0.0 and blacks == 0.0:
+        return params
+    white = 1.0 - float(c["levels_white_span"]) * max(-1.0, min(1.0, float(whites)))
+    black = -float(c["levels_black_span"]) * max(-1.0, min(1.0, float(blacks)))
+    gain = 1.0 / (white - black)
+    return _rescaled(params, gain, -float(c["d_max"]) * (1.0 - white) * gain)
+
+
+def scan_levels(
+    params: CurveParams,
+    ref_slope: float,
+    ref_pivot: float,
+    shadow_point: float,
+    highlight_point: float,
+    c: Dict[str, Any],
+    levels: Optional[Tuple[float, float]] = None,
+) -> CurveParams:
+    """`params` rescaled and shifted in density so that the reference line (green at neutral
+    Grade and Density) prints the shadow point at the black level and the highlight point at
+    the white level, as fractions of the code range. `levels` is (black, white), by default
+    scan_black_level and scan_white_level."""
+    span = float(shadow_point) - float(highlight_point)
+    if span < 1e-3 or abs(ref_slope) < 1e-6:
+        return params
+    d_max = float(c["d_max"])
+    black, white = levels if levels is not None else (c["scan_black_level"], c["scan_white_level"])
+    d_black = d_max * (1.0 - float(black))
+    d_white = d_max * (1.0 - float(white))
+    gain = (d_black - d_white) / span / ref_slope
+    shift = d_white - gain * ref_slope * (float(highlight_point) - ref_pivot)
+    return _rescaled(params, gain, shift)
+
+
+def _paper_curve_params(
+    grade: float,
+    density: float,
+    auto_normalize_contrast: bool,
+    strength: float,
+    lum_range: Optional[float],
+    textural_range: Optional[float],
+    d_min: float = 0.0,
+    anchor: Optional[float] = None,
+    paper: Optional[PaperProfile] = None,
+    neutral_axis_norm: Any = None,
+    grade_trims: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+    shadow_point: Optional[float] = None,
+    midtone_gamma: Optional[float] = None,
+) -> CurveParams:
+    """
+    The paper's per-channel (slopes, pivots, curvatures), before a scan profile's levels.
 
     Cast Removal fits R/B to green's neutral axis (green is the reference; its pivot rides the
     luma anchor, so exposure is unchanged). neutral_axis_norm (midtone, shadow, highlight) ->

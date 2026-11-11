@@ -68,7 +68,8 @@ struct ExposureUniforms {
     diff_range: vec4<f32>,
     // Print-stock LUT: xyz = e_max per dye (0 = no LUT), w = the black luminance BPC maps to 0.
     lut: vec4<f32>,
-    // B&W collapse weights on the normalized log channels (collapse_weights); w is a pad.
+    // B&W collapse weights on the normalized log channels (collapse_weights); w = the scan
+    // transfer's exponent (scan_gamma, 0 = a paper).
     bw: vec4<f32>,
 };
 
@@ -403,6 +404,10 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         if (params.bpc != 0.0) {
             transmittance = (transmittance - vec3<f32>(params.lut.w)) / (1.0 - params.lut.w);
         }
+    } else if (params.bw.w > 0.0) {
+        // Scan transfer: a code linear in density; mirrors negpy_core print_curve.rs.
+        let z = clamp((vec3<f32>(params.d_max) - dens) / params.d_max, vec3<f32>(0.0), vec3<f32>(1.0));
+        transmittance = pow(z, vec3<f32>(params.bw.w));
     } else if (params.bpc != 0.0) {
         // BPC: physical paper black -> display 0; mirrors the CPU kernel prologue
         // (negative toe raises the clip point). oetf_encode clamps the tail to 0.
