@@ -251,6 +251,7 @@ class PhotometricProcessor:
             highlight_point=context.metrics.get("highlight_point"),
             levels=(self.config.whites, self.config.blacks),
             tone_profile=self.config.tone_profile,
+            exposure_ev=self.config.exposure_ev,
         )
         context.metrics["print_slopes"] = slopes
         hl_point = context.metrics.get("highlight_point")

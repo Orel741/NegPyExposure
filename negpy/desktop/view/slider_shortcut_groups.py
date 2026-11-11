@@ -64,7 +64,7 @@ SLIDER_GROUPS: tuple[SliderShortcutGroup, ...] = (
         inc_sign=-1.0,
         dec_sign=1.0,
     ),
-    _g("density", tr("Exposure ↑/↓"), "density_up", "density_down", 1.0, tr("Exposure"), step_decimals=0),
+    _g("density", tr("Exposure ↑/↓"), "density_up", "density_down", 0.1, tr("Exposure"), step_suffix=" EV"),
     _g(
         "grade",
         tr("Contrast ↑/↓"),

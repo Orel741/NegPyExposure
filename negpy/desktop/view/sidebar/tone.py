@@ -25,7 +25,6 @@ _ISO_R_MAX = float(EXPOSURE_CONSTANTS["iso_r_max"])
 # more contrast: config units per slider unit, by field.
 _SCALE_TRAVEL = 100.0
 _SIMPLE_SCALES = {
-    "density": -0.5 / _SCALE_TRAVEL,
     "grade": -(_ISO_R_MAX - NEUTRAL["grade"]) / _SCALE_TRAVEL,
     "shadow_density": -0.4 / _SCALE_TRAVEL,
     "highlight_density": -0.6 / _SCALE_TRAVEL,
@@ -34,7 +33,8 @@ _SIMPLE_SCALES = {
     "brightness": 1.0 / _SCALE_TRAVEL,
 }
 _SIMPLE_NEUTRAL = {**NEUTRAL, "whites": 0.0, "blacks": 0.0, "brightness": 0.0}
-_FIELD_RANGE = {"density": (0.0, 2.0), "grade": (_ISO_R_MIN, _ISO_R_MAX)}
+_FIELD_RANGE = {"grade": (_ISO_R_MIN, _ISO_R_MAX)}
+_EXPOSURE_EV_MAX = 5.0
 
 
 def simple_value(field: str, stored: float) -> float:
@@ -98,14 +98,17 @@ def channel_pages(chooser: SegmentedChoice, config: object, rows) -> tuple[Slide
 
 
 class ToneSidebar(BaseSidebar):
-    """Exposure, Brightness, Contrast, Lights, Darks, Whites and Blacks, each about the value
-    Auto meters. The Advanced fold holds split Grade, the per-layer Grade trims behind a
-    [Global/R/G/B] channel selector, Preflash, Diffusion and Contrast Mask."""
+    """Exposure in stops, then Brightness, Contrast, Lights, Darks, Whites and Blacks, each about
+    the value Auto meters. The Advanced fold holds Print Density, split Grade, the per-layer Grade
+    trims behind a [Global/R/G/B] channel selector, Preflash, Diffusion and Contrast Mask."""
 
     def _init_ui(self) -> None:
         conf = self.state.config.exposure
 
-        self.density_slider = _simple_slider(tr("Exposure"))
+        self.exposure_slider = CompactSlider(
+            tr("Exposure"), -_EXPOSURE_EV_MAX, _EXPOSURE_EV_MAX, conf.exposure_ev, step=0.05, unit=" EV", has_neutral=True
+        )
+        self.density_slider = CompactSlider(tr("Print Density"), 0.0, 2.0, conf.density)
         self.brightness_slider = _simple_slider(tr("Brightness"))
         self.brightness_slider.setToolTip(tr("Lightens or darkens the midtones, and leaves black and white where they are."))
         self.grade_slider = _simple_slider(tr("Contrast"))
@@ -187,7 +190,7 @@ class ToneSidebar(BaseSidebar):
         )
         self.auto_merged_hint.setVisible(False)
         self.layout.addWidget(self.auto_merged_hint)
-        self.layout.addWidget(self.density_slider)
+        self.layout.addWidget(self.exposure_slider)
         self.layout.addWidget(self.brightness_slider)
         self.layout.addWidget(self.grade_slider)
         self.grade_softest_hint = hint_label(tr("Flat negative: this is the lowest Contrast it can print."), kind="warning")
@@ -220,6 +223,7 @@ class ToneSidebar(BaseSidebar):
         advanced_header, self.advanced_fold = group_fold(
             "tone_advanced",
             tr("Advanced"),
+            self.density_slider,
             self.ch_btn,
             self.split_grade,
             self.preflash_slider,
@@ -233,6 +237,7 @@ class ToneSidebar(BaseSidebar):
 
         # Global-only controls, greyed while a channel page is active.
         self._global_only = (
+            self.exposure_slider,
             self.density_slider,
             self.brightness_slider,
             self.grade_slider,
@@ -344,6 +349,8 @@ class ToneSidebar(BaseSidebar):
         )
 
         for slider, field in (
+            (self.exposure_slider, "exposure_ev"),
+            (self.density_slider, "density"),
             (self.contrast_mask_slider, "contrast_mask_strength"),
             (self.diffusion_slider, "diffusion"),
             (self.preflash_slider, "preflash"),
@@ -401,7 +408,6 @@ class ToneSidebar(BaseSidebar):
 
     def _driven_sliders(self) -> dict:
         return {
-            "density": self.density_slider,
             "brightness": self.brightness_slider,
             "grade": self.grade_slider,
             "highlight_density": self.highlight_density_slider,
@@ -491,6 +497,8 @@ class ToneSidebar(BaseSidebar):
             for i, fields in enumerate(self._channel_fields, start=1):
                 self.ch_btn.set_edited(i, any(getattr(conf, f) != 0.0 for f in fields))
             self._sync_driven()
+            self.exposure_slider.setValue(conf.exposure_ev)
+            self.density_slider.setValue(conf.density)
             self.contrast_mask_slider.setValue(conf.contrast_mask_strength)
             self.diffusion_slider.setValue(conf.diffusion)
             self.preflash_slider.setValue(conf.preflash)
@@ -506,6 +514,7 @@ class ToneSidebar(BaseSidebar):
         for w in (
             self.ch_btn,
             self.tone_profile_combo,
+            self.exposure_slider,
             self.density_slider,
             self.brightness_slider,
             self.grade_slider,

@@ -277,7 +277,7 @@ Corrects the color of the print, as the color filters of a darkroom enlarger do.
 How light or dark the picture is, and how much contrast it has. Each slider starts at 0, and a double-click puts it back.
 
 *   **Tone profile** (Digital (Scan) stock only): the starting look. **Standard** is the default. **Soft** and **Hard** have less and more contrast. **Linear** clips nothing at black or white. **Flat** is low in contrast, as a start for your own edit. **Deep** has dark shadows.
-*   **Exposure**: how light or dark the picture is. Higher is lighter.
+*   **Exposure**: brightness in stops (EV). +1 doubles the light in the midtones.
 *   **Brightness** (Digital (Scan) stock only): lightens or darkens the midtones. Black and white stay where they are.
 *   **Contrast**: the difference between dark and light tones. Higher gives more contrast.
 *   **Lights** / **Darks**: lighten (positive) or darken (negative) only the highlights or only the shadows.
@@ -288,11 +288,12 @@ How light or dark the picture is, and how much contrast it has. Each slider star
     *   **Hold Black**: when you lighten the shadows, the deepest blacks stay black.
 *   **Test Strip** (`Shift+T`): a grid of versions at different brightness and contrast. Click the one you like. `Esc` closes it.
 *   **Advanced** (fold): the darkroom controls.
+    *   **Print Density**: the exposure time under an enlarger. Lower is lighter.
     *   **Global / R / G / B**: R, G or B applies the grades to one color only, for a cast that differs between shadows and highlights.
     *   **Shadows Grade** / **Highlights Grade**: contrast in the shadows or the highlights only.
     *   **Preflash**: brings back detail in the brightest areas.
     *   **Diffusion**: a soft glow; dark areas spread into bright ones.
-    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail. Fujifilm Frontier scanners get a similar effect with HyperTone.
+    *   **Contrast Mask**: opens up large dark areas and holds back large bright ones, and keeps fine detail.
 
 **White Point** and **Black Point** are on the Roll tab's **Metering** card ([§10.6](#106-metering-negative--positive)).
 

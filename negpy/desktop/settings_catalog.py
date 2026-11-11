@@ -220,6 +220,7 @@ CATALOG: list[tuple[str, tuple[SettingRow, ...]]] = [
         _row(mark("Flat Field"), "flatfield", "apply", "profile_id", fmt=_fmt_flatfield),
     )),
     (mark("Tone"), (
+        _row(mark("Exposure (EV)"), "exposure", "exposure_ev"),
         _row(mark("Print Density"), "exposure", "density"),
         _row(mark("Tone Profile"), "exposure", "tone_profile"),
         _row(mark("Brightness"), "exposure", "brightness"),
@@ -557,6 +558,7 @@ CROP_FIELDS = (
 )
 
 TONE_FIELDS = (
+    "exposure_ev",
     "density",
     "grade",
     "grade_trim_red",

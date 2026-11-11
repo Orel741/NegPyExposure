@@ -132,13 +132,13 @@ Korrigiert die Farbe des Abzugs, wie die Farbfilter eines Vergrößerers in der 
 *   **Farbstichentfernung**: entfernt einen Farbstich, der in den dunklen und hellen Teilen des Bildes unterschiedlich ist. Der Start liegt bei 0,5 (halb) bei Farbnegativen und bei 0 bei Dias. Blätter, Himmel und Wasser gelten nicht als grau und behalten ihre Farbe.
 *   **Filter**: ein Farbfilter, wie er bei Schwarzweißfilm vor dem Kameraobjektiv sitzt. Er erscheint nur bei einem Farbnegativ oder Farbdia in S/W, und ersetzt die Regler darüber. Jeder Filter dunkelt die Farben ab, die seiner eigenen gegenüberliegen. Gelb #8, Tiefgelb #15, Orange #21 und Rot #25 machen einen blauen Himmel Schritt für Schritt dunkler. Rot macht außerdem Blätter dunkel und Haut blass. Gelbgrün #11 und Grün #58 machen Blätter heller und Haut dunkler. Keiner gibt den Look eines normalen Schwarzweißfilms.
 
-<!-- panel:tone src:0caf4259 -->
+<!-- panel:tone src:d7774fed -->
 ### 5.2 Tonwerte: Helligkeit und Kontrast
 
 Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beginnt bei 0, und ein Doppelklick setzt ihn zurück.
 
 *   **Tonprofil** (nur beim Papier Digital (Scan)): der Ausgangslook. **Standard** ist die Vorgabe. **Weich** und **Hart** haben weniger und mehr Kontrast. **Linear** schneidet bei Schwarz und Weiß nichts ab. **Flach** hat wenig Kontrast, als Ausgangspunkt für deine eigene Bearbeitung. **Tief** hat dunkle Schatten.
-*   **Belichtung**: wie hell oder dunkel das Bild ist. Höher ist heller.
+*   **Belichtung**: Helligkeit in Blendenstufen (EV). +1 verdoppelt das Licht in den Mitteltönen.
 *   **Helligkeit** (nur beim Papier Digital (Scan)): hellt die Mitteltöne auf oder dunkelt sie ab. Schwarz und Weiß bleiben an ihrem Platz.
 *   **Kontrast**: der Unterschied zwischen dunklen und hellen Tönen. Höher gibt mehr Kontrast.
 *   **Lichter** / **Tiefen**: hellen nur die Lichter oder nur die Schatten auf (positiv) oder dunkeln sie ab (negativ).
@@ -149,11 +149,12 @@ Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beg
     *   **Schwarz halten**: Wenn du die Schatten aufhellst, bleiben die tiefsten Schwarztöne schwarz.
 *   **Probestreifen** (`Shift+T`): ein Raster von Versionen mit unterschiedlicher Helligkeit und unterschiedlichem Kontrast. Klicke auf die, die dir gefällt. `Esc` schließt es.
 *   **Erweitert** (Falte): die Dunkelkammer-Regler.
+    *   **Abzugsdichte**: die Belichtungszeit unter dem Vergrößerer. Niedriger ist heller.
     *   **Global / R / G / B**: R, G oder B wendet die Gradationen nur auf eine Farbe an, für einen Farbstich, der in Schatten und Lichtern unterschiedlich ist.
     *   **Schattengradation** / **Lichtergradation**: Kontrast nur in den Schatten oder nur in den Lichtern.
     *   **Vorbelichtung**: bringt Details in den hellsten Bereichen zurück.
     *   **Diffusion**: ein weiches Glühen. Dunkle Bereiche breiten sich in helle aus.
-    *   **Kontrastmaske**: öffnet große dunkle Bereiche, hält große helle zurück und erhält feine Details. Beim digitalen Abzug erreichen Fujifilm-Frontier-Scanner mit HyperTone einen ähnlichen Effekt.
+    *   **Kontrastmaske**: öffnet große dunkle Bereiche, hält große helle zurück und erhält feine Details.
 
 **Weißpunkt** und **Schwarzpunkt** findest du auf der Karte **Messung** im Tab Rolle ([§10.6](#106-metering-negative--positive)).
 

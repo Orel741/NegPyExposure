@@ -5,7 +5,7 @@ import numpy as np
 
 from negpy.domain.interfaces import PipelineContext
 from negpy.domain.models import WorkspaceConfig
-from negpy.features.exposure.logic import apply_characteristic_curve, compute_pivot, grade_to_slope
+from negpy.features.exposure.logic import apply_characteristic_curve, compute_pivot, grade_to_slope, per_channel_curve_params
 from negpy.features.exposure.models import EXPOSURE_CONSTANTS
 from negpy.features.exposure.processor import PhotometricProcessor
 from negpy.features.process.models import ProcessMode
@@ -54,6 +54,16 @@ class TestComputePivot(unittest.TestCase):
         p_light = compute_pivot(slope, density=0.5)
         p_dark = compute_pivot(slope, density=1.5)
         self.assertGreater(p_light, p_dark)
+
+    def test_exposure_ev_lowers_every_channel_density_by_a_fixed_step(self):
+        """+1 EV prints each channel lighter by exposure_ev_density, the same at every slope."""
+        base = per_channel_curve_params(110.0, 1.0, False, 0.0, 1.3, None)
+        up = per_channel_curve_params(110.0, 1.0, False, 0.0, 1.3, None, exposure_ev=1.0)
+        step = float(EXPOSURE_CONSTANTS["exposure_ev_density"])
+        for ch in range(3):
+            d0 = base[0][ch] * (0.5 - base[1][ch])
+            d1 = up[0][ch] * (0.5 - up[1][ch])
+            self.assertAlmostEqual(d0 - d1, step, places=6)
 
     def test_pivot_is_deterministic(self):
         """Same sliders -> same pivot, regardless of image content (no metering)."""
