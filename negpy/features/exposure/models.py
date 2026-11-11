@@ -66,6 +66,8 @@ class ExposureConfig:
     blacks: float = 0.0
     # Midtone brightness of a scan profile, -1 to 1; the ends hold (papers.scan_gamma).
     brightness: float = 0.0
+    # Exposure in stops, positive lighter: a print density shift (exposure_shift).
+    exposure_ev: float = 0.0
     # A scan profile's starting look: a key of TONE_PROFILES.
     tone_profile: str = "standard"
     # A shadow lift fades to nothing at paper black, so the black point barely moves.
@@ -175,6 +177,8 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # Physical paper black (D_max) and paper white (D_min) densities.
     "d_max": 2.3,
     "d_min": 0.06,
+    # Print density per stop of Exposure: on the scan stock a mid-gray doubles or halves in light.
+    "exposure_ev_density": 0.48,
     # Global multiplier on the toe and shoulder slider values.
     "toe_shoulder_strength": 0.85,
     # Asymmetric H&D print curve: a straight midtone of slope k between a toe

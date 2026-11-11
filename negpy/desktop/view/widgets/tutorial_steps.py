@@ -281,7 +281,7 @@ def build(window: "MainWindow") -> list[TutorialStep]:
                 "Auto Density sets the brightness of each frame; your change adjusts from there."
             ),
             lambda w: cp(w).tone_section,
-            focus=lambda w: cp(w).tone_sidebar.density_slider,
+            focus=lambda w: cp(w).tone_sidebar.exposure_slider,
             task=tr("Drag Exposure and watch the picture."),
             watch=lambda w: w.state.config.exposure.density,
             guide=("tone", "Tone"),

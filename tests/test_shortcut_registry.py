@@ -117,7 +117,7 @@ def test_tooltip_without_binding_returns_plain_text():
 
 def test_default_slider_steps_match_current_keyboard_behavior():
     steps = default_slider_steps()
-    assert steps["density"] == 1.0
+    assert steps["density"] == 0.1
     assert steps["grade"] == 10.0
     assert steps["offset"] == 1.0
     assert steps["temperature"] == 50.0
@@ -141,7 +141,7 @@ def test_load_slider_steps_merges_saved_overrides():
     steps = load_slider_steps(repo)
 
     assert steps["grade"] == 5.0
-    assert steps["density"] == 1.0
+    assert steps["density"] == 0.1
 
 
 def test_category_editor_rows_merge_slider_pairs():

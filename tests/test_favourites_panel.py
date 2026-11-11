@@ -114,7 +114,7 @@ def test_panel_is_empty_by_default(controls, qapp):
 def test_panel_mirrors_stored_favourites_in_order(controls, qapp):
     panel = _favourites(controls, _Repo(favourite_sliders=["saturation", "density"]))
     labels = [clone.label.text() for clone, _ in panel._mirrors]
-    assert labels == [controls.lab_sidebar.saturation_slider.label.text(), controls.tone_sidebar.density_slider.label.text()]
+    assert labels == [controls.lab_sidebar.saturation_slider.label.text(), controls.tone_sidebar.exposure_slider.label.text()]
 
 
 def test_moving_a_mirror_moves_the_original(controls, qapp):

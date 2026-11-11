@@ -304,7 +304,7 @@ def transfer_curve_params(
     Returned rather than applied so the GPU can upload the identical numbers.
     """
     c = TRANSFER_CONSTANTS
-    stops = (1.0 - float(config.density)) * float(c["transfer_density_stops"])
+    stops = (1.0 - float(config.density)) * float(c["transfer_density_stops"]) + float(config.exposure_ev)
     exposure_offset = stops * float(np.log10(2.0))
 
     grade = float(config.grade)

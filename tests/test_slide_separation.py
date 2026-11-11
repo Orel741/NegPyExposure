@@ -25,7 +25,17 @@ def _with_trims(*names: str) -> set:
 
 # Drives the transfer curve on a raw slide and on a Positive frame.
 TRANSFER = (
-    {"density", "grade", "wb_cyan", "wb_magenta", "wb_yellow", "shadow_density", "highlight_density", "cast_removal_strength"}
+    {
+        "density",
+        "exposure_ev",
+        "grade",
+        "wb_cyan",
+        "wb_magenta",
+        "wb_yellow",
+        "shadow_density",
+        "highlight_density",
+        "cast_removal_strength",
+    }
     | {f"{zone}_{dye}" for zone in ("shadow", "highlight") for dye in ("cyan", "magenta", "yellow")}
     | _with_trims("toe", "shoulder", "toe_width", "shoulder_width", "dye_separation")
     | {"separation_damping"}

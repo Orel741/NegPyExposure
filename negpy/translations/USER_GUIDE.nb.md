@@ -132,13 +132,13 @@ Korrigerer fargen i kopien, slik fargefiltrene i et forstørrelsesapparat i mør
 *   **Fjerning av fargestikk**: fjerner et fargestikk som er ulikt i de mørke og lyse delene av bildet. Den starter på 0,5 (halvparten) for fargenegativer og på 0 for dias. Blader, himmel og vann regnes ikke som grått, så de beholder fargen.
 *   **Filter**: et farget filter, som på kameraobjektivet for svart-hvitt-film. Det vises bare for et fargenegativ eller fargedias i S/H, og erstatter kontrollene ovenfor. Hvert filter gjør fargene motsatt av sin egen mørkere. Gul #8, Dyp gul #15, Oransje #21 og Rød #25 gjør en blå himmel mørkere, trinn for trinn. Rød gjør også blader mørke og hud blek. Gulgrønn #11 og Grønn #58 gjør blader lysere og hud mørkere. Ingen gir utseendet til en vanlig svart-hvitt-film.
 
-<!-- panel:tone src:0caf4259 -->
+<!-- panel:tone src:d7774fed -->
 ### 5.2 Tone: lyshet og kontrast
 
 Hvor lyst eller mørkt bildet er, og hvor mye kontrast det har. Hver glidebryter starter på 0, og et dobbeltklikk setter den tilbake.
 
 *   **Toneprofil** (bare med papiret Digital (Scan)): utgangsuttrykket. **Standard** er standarden. **Myk** og **Hard** har mindre og mer kontrast. **Lineær** klipper ingenting ved svart eller hvitt. **Flat** har lav kontrast, som utgangspunkt for din egen redigering. **Dyp** har mørke skygger.
-*   **Eksponering**: hvor lyst eller mørkt bildet er. Høyere er lysere.
+*   **Eksponering**: lyshet i blendertrinn (EV). +1 dobler lyset i mellomtonene.
 *   **Lysstyrke** (bare med papiret Digital (Scan)): gjør mellomtonene lysere eller mørkere. Svart og hvitt blir der de er.
 *   **Kontrast**: forskjellen mellom mørke og lyse toner. Høyere gir mer kontrast.
 *   **Lyse toner** / **Mørke toner**: gjør bare høylysene eller bare skyggene lysere (positiv) eller mørkere (negativ).
@@ -149,11 +149,12 @@ Hvor lyst eller mørkt bildet er, og hvor mye kontrast det har. Hver glidebryter
     *   **Hold svart**: når du gjør skyggene lysere, forblir de dypeste svarttonene svarte.
 *   **Prøvestripe** (`Shift+T`): et rutenett av versjoner med ulik lyshet og kontrast. Klikk den du liker. `Esc` lukker den.
 *   **Avansert** (fold): mørkeromskontrollene.
+    *   **Kopitetthet**: eksponeringstiden under forstørrelsesapparatet. Lavere er lysere.
     *   **Global / R / G / B**: R, G eller B bruker graderingene på bare én farge, for et fargestikk som er ulikt i skygger og høylys.
     *   **Skyggegradering** / **Høylysgradering**: kontrast bare i skyggene eller høylysene.
     *   **Forbelysning**: henter tilbake detaljer i de lyseste områdene.
     *   **Diffusjon**: en myk glød; mørke områder sprer seg inn i lyse.
-    *   **Kontrastmaske**: åpner store mørke områder og holder tilbake store lyse, og beholder fine detaljer. I digital kopiering får Fujifilm Frontier-skannere en lignende virkning med HyperTone.
+    *   **Kontrastmaske**: åpner store mørke områder og holder tilbake store lyse, og beholder fine detaljer.
 
 **Hvitpunkt** og **Svartpunkt** er på kortet **Lysmåling** i fanen Rull ([§10.6](#106-metering-negative--positive)).
 

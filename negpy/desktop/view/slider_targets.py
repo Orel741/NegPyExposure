@@ -13,7 +13,7 @@ SLIDER_ATTRS: dict[str, str] = {
     "magenta": "color_sidebar.magenta_slider",
     "yellow": "color_sidebar.yellow_slider",
     "temperature": "color_sidebar.temp_slider",
-    "density": "tone_sidebar.density_slider",
+    "density": "tone_sidebar.exposure_slider",
     "grade": "tone_sidebar.grade_slider",
     "toe": "paper_sidebar.toe_slider",
     "toe_width": "paper_sidebar.toe_w_slider",

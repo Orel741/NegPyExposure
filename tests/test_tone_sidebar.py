@@ -5,6 +5,7 @@ import pytest
 
 from negpy.desktop.session import AppState
 from negpy.desktop.view.sidebar.tone import ToneSidebar
+from negpy.features.exposure.auto_sliders import NEUTRAL
 from negpy.features.process.models import ProcessMode
 
 
@@ -146,10 +147,9 @@ def _metered_sidebar():
 def test_simple_sliders_show_the_distance_from_neutral(qapp):
     controller, sidebar = _metered_sidebar()
     conf = controller.state.config
-    controller.state.config = replace(conf, exposure=replace(conf.exposure, density=0.8, grade=102.0, whites=0.25, blacks=-0.1))
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, grade=102.0, whites=0.25, blacks=-0.1))
     sidebar.sync_ui()
 
-    assert sidebar.density_slider.value() == pytest.approx(40.0)
     assert sidebar.grade_slider.value() == pytest.approx(20.0)
     assert sidebar.whites_slider.value() == pytest.approx(25.0)
     assert sidebar.blacks_slider.value() == pytest.approx(-10.0)
@@ -162,7 +162,6 @@ def test_simple_sliders_show_the_distance_from_neutral(qapp):
 @pytest.mark.parametrize(
     "field, position, stored",
     [
-        ("density", 50.0, 0.75),
         ("grade", -100.0, 180.0),
         ("highlight_density", 30.0, -0.18),
         ("whites", -40.0, -0.4),
@@ -182,11 +181,25 @@ def test_a_simple_slider_edit_stores_the_field_value(qapp, field, position, stor
 def test_reset_on_a_simple_slider_restores_the_neutral(qapp):
     controller, sidebar = _metered_sidebar()
     conf = controller.state.config
-    controller.state.config = replace(conf, exposure=replace(conf.exposure, density=1.3))
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, grade=130.0))
     sidebar.sync_ui()
-    sidebar.density_slider.valueCommitted.emit(sidebar.density_slider.default_value())
+    sidebar.grade_slider.valueCommitted.emit(sidebar.grade_slider.default_value())
 
-    assert controller.apply_config.call_args.args[0].exposure.density == 1.0
+    assert controller.apply_config.call_args.args[0].exposure.grade == NEUTRAL["grade"]
+
+
+def test_exposure_reads_and_stores_stops(qapp):
+    controller, sidebar = _metered_sidebar()
+    conf = controller.state.config
+    controller.state.config = replace(conf, exposure=replace(conf.exposure, exposure_ev=-1.5, density=1.2))
+    sidebar.sync_ui()
+    assert sidebar.exposure_slider.value() == pytest.approx(-1.5)
+    assert sidebar.density_slider.value() == pytest.approx(1.2)
+
+    sidebar.exposure_slider.valueCommitted.emit(0.75)
+    committed = controller.apply_config.call_args.args[0].exposure
+    assert committed.exposure_ev == pytest.approx(0.75)
+    assert committed.density == pytest.approx(1.2)
 
 
 def test_brightness_shows_only_on_a_scan_stock(qapp):

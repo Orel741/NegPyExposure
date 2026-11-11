@@ -287,6 +287,7 @@ def curve_params_from_metrics(
         highlight_point=metrics.get("highlight_point"),
         levels=(exposure.whites, exposure.blacks),
         tone_profile=exposure.tone_profile,
+        exposure_ev=exposure.exposure_ev,
     )
 
 
@@ -1065,6 +1066,7 @@ def per_channel_curve_params(
     highlight_point: Optional[float] = None,
     levels: Tuple[float, float] = (0.0, 0.0),
     tone_profile: str = "standard",
+    exposure_ev: float = 0.0,
 ) -> CurveParams:
     """
     Per-channel (slopes, pivots, curvatures); single source of truth for CPU/GPU/chart.
@@ -1072,7 +1074,7 @@ def per_channel_curve_params(
 
     A scan profile under both Autos places the frame by its levels (scan_levels); Grade and
     Density then act about that placement, and the tone profile sets the levels and a
-    contrast gain. `levels` is (Whites, Blacks), applied last.
+    contrast gain. `levels` is (Whites, Blacks), then Exposure (exposure_shift) is applied last.
     """
     args = (auto_normalize_contrast, strength, lum_range, textural_range, d_min, anchor, paper, neutral_axis_norm)
     params = _paper_curve_params(grade, density, *args, grade_trims, shadow_point, midtone_gamma)
@@ -1095,7 +1097,15 @@ def per_channel_curve_params(
         gain = profile[3]
         turn = float(c["d_max"]) * (1.0 - float(c["scan_contrast_pivot"]))
         params = _rescaled(params, gain, turn * (1.0 - gain)) if gain != 1.0 else params
-    return levels_trim(params, levels[0], levels[1], c)
+    return exposure_shift(levels_trim(params, levels[0], levels[1], c), exposure_ev, c)
+
+
+def exposure_shift(params: CurveParams, exposure_ev: float, c: Dict[str, Any]) -> CurveParams:
+    """`params` with every channel's print density lowered by exposure_ev_density per stop.
+    One shift for all channels keeps a neutral neutral."""
+    if exposure_ev == 0.0:
+        return params
+    return _rescaled(params, 1.0, -float(exposure_ev) * float(c["exposure_ev_density"]))
 
 
 def _rescaled(params: CurveParams, gain: float, shift: float) -> CurveParams:

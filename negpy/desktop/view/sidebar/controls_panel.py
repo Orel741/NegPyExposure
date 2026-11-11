@@ -688,12 +688,13 @@ class ControlsPanel(QWidget):
                 ["yellow_up", "yellow_down"],
             )
         )
-        exp.density_slider.setToolTip(
+        exp.exposure_slider.setToolTip(
             tooltip_with_shortcut(
-                tr("How light or dark the picture is, where higher is lighter."),
+                tr("How light or dark the picture is, in stops, where each step up doubles the light."),
                 ["density_up", "density_down"],
             )
         )
+        exp.density_slider.setToolTip(tr("Print Density: how light or dark the print is, like the exposure time under an enlarger."))
         exp.grade_slider.setToolTip(
             tooltip_with_shortcut(
                 tr("The difference between dark and light tones, where higher gives more contrast."),
