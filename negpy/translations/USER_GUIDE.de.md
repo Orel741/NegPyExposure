@@ -51,7 +51,7 @@ Ein einfaches Wort passt auf den Dateinamen. Begriffe der Form `field:value` pas
 
 Begriffe lassen sich kombinieren: `film:portra iso:>=400 -rejected:`. Metadaten-Begriffe passen nur auf Bilder, deren Metadaten du ausgefüllt hast. **Suche nach Bedeutung** (aktiviere sie unter Einstellungen → Leistung) findet Bilder über eine Beschreibung, zum Beispiel "ein Hund am Strand".
 
-<!-- panel:analysis src:7afa1351 -->
+<!-- panel:analysis src:19903f64 -->
 ## 3. Analyse-Anzeige
 
 Diese Anzeige beschreibt das aktuelle Bild, während du bearbeitest.
@@ -75,7 +75,7 @@ Dreiecke in den oberen Ecken warnen, wenn Schatten reines Schwarz (links) oder L
 
 Der **Stufenkeil** druckt 21 Graustufen. Stufen, die in Schwarz oder Weiß verschmelzen, sind verlorene Tonwerte. Der **Zonenstreifen** zeigt, wie viel vom Bild in jede Zone fällt, von 0 (Schwarz) über V (mittleres Grau) bis X (Weiß). Doppelklicke darauf (oder drücke `Shift+Z`) für die **Zonen-Überlagerung**, die das Bild nach Zonen einfärbt.
 
-Klicke auf eine Zone im Streifen, dann auf eine Stelle im Bild. NegPy stellt den Abzug so ein, dass diese Stelle in dieser Zone abgezogen wird. Ein Pin setzt die Abzugsdichte, ein zweiter auch die ISO-R-Gradation. **Zonen platzieren** (oder Enter) übernimmt das Ergebnis, `Esc` bricht ab.
+Klicke auf eine Zone im Streifen, dann auf eine Stelle im Bild. NegPy stellt den Abzug so ein, dass diese Stelle in dieser Zone abgezogen wird. Ein Pin setzt die Belichtung, ein zweiter auch den Kontrast. **Zonen platzieren** (oder Enter) übernimmt das Ergebnis, `Esc` bricht ab.
 
 #### Messwerte
 
@@ -132,25 +132,27 @@ Korrigiert die Farbe des Abzugs, wie die Farbfilter eines Vergrößerers in der 
 *   **Farbstichentfernung**: entfernt einen Farbstich, der in den dunklen und hellen Teilen des Bildes unterschiedlich ist. Der Start liegt bei 0,5 (halb) bei Farbnegativen und bei 0 bei Dias. Blätter, Himmel und Wasser gelten nicht als grau und behalten ihre Farbe.
 *   **Filter**: ein Farbfilter, wie er bei Schwarzweißfilm vor dem Kameraobjektiv sitzt. Er erscheint nur bei einem Farbnegativ oder Farbdia in S/W, und ersetzt die Regler darüber. Jeder Filter dunkelt die Farben ab, die seiner eigenen gegenüberliegen. Gelb #8, Tiefgelb #15, Orange #21 und Rot #25 machen einen blauen Himmel Schritt für Schritt dunkler. Rot macht außerdem Blätter dunkel und Haut blass. Gelbgrün #11 und Grün #58 machen Blätter heller und Haut dunkler. Keiner gibt den Look eines normalen Schwarzweißfilms.
 
-<!-- panel:tone src:773012ec -->
+<!-- panel:tone src:58aae57a -->
 ### 5.2 Tonwerte: Helligkeit und Kontrast
 
-Wie hell oder dunkel der Abzug ist und wie viel Kontrast er hat.
+Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beginnt bei 0, und ein Doppelklick setzt ihn zurück.
 
-*   **Abzugsdichte**: wie hell oder dunkel der Abzug ist (die Belichtungszeit in der Dunkelkammer). Niedriger ist heller.
-*   **ISO-R-Gradation**: Kontrast (die Papiergradation in der Dunkelkammer). Eine niedrigere Zahl gibt mehr Kontrast. Etwa 110 ist normal.
-*   **Auto** (der Zauberstab, auch in der Leiste des Tabs Belichtung): **Auto-Dichte** und **Auto-Gradation** stellen Helligkeit und Kontrast für jedes Bild ein, damit eine Rolle gleichmäßig abgezogen wird. Ein Regler zeigt dann den automatischen Wert: Bewege ihn zum Anpassen, doppelklicke darauf für den Rückweg. Ein Rechtsklick auf den Zauberstab schaltet beide ein oder aus. Das Auto-Menü enthält außerdem:
+*   **Belichtung**: wie hell oder dunkel das Bild ist. Höher ist heller.
+*   **Helligkeit** (nur beim Papier Digital (Scan)): hellt die Mitteltöne auf oder dunkelt sie ab. Schwarz und Weiß bleiben an ihrem Platz.
+*   **Kontrast**: der Unterschied zwischen dunklen und hellen Tönen. Höher gibt mehr Kontrast.
+*   **Lichter** / **Tiefen**: hellen nur die Lichter oder nur die Schatten auf (positiv) oder dunkeln sie ab (negativ).
+*   **Weiß** / **Schwarz**: verschieben den Weißpunkt oder den Schwarzpunkt. Positives Weiß hellt die hellsten Töne auf. Negatives Schwarz vertieft die dunkelsten Töne.
+*   **Auto** (der Zauberstab, auch in der Leiste des Tabs Belichtung): **Auto-Dichte** und **Auto-Gradation** stellen Helligkeit und Kontrast für jedes Bild ein, damit eine Rolle gleichmäßig abgezogen wird. Die Regler passen dann von den automatischen Werten aus an. Ein Rechtsklick auf den Zauberstab schaltet beide ein oder aus. Das Auto-Menü enthält außerdem:
     *   **Zielwerte festlegen…**: die Helligkeit und den Kontrast, die Auto anstrebt.
     *   **Auto-Dichte/Gradation fixieren**: behält die automatischen Werte dieses Bildes und schaltet Auto dafür aus.
     *   **Schwarz halten**: Wenn du die Schatten aufhellst, bleiben die tiefsten Schwarztöne schwarz.
 *   **Probestreifen** (`Shift+T`): ein Raster von Versionen mit unterschiedlicher Helligkeit und unterschiedlichem Kontrast. Klicke auf die, die dir gefällt. `Esc` schließt es.
-*   **Schattendichte** / **Lichterdichte** (Falte unter Abzugsdichte): dunkeln nur die Schatten oder nur die Lichter ab oder hellen sie auf.
-*   **Schattengradation** / **Lichtergradation** (Falte unter ISO-R-Gradation): Kontrast nur in den Schatten oder nur in den Lichtern.
-*   **Druckhilfen** (Falte):
+*   **Erweitert** (Falte): die Dunkelkammer-Regler.
+    *   **Global / R / G / B**: R, G oder B wendet die Gradationen nur auf eine Farbe an, für einen Farbstich, der in Schatten und Lichtern unterschiedlich ist.
+    *   **Schattengradation** / **Lichtergradation**: Kontrast nur in den Schatten oder nur in den Lichtern.
     *   **Vorbelichtung**: bringt Details in den hellsten Bereichen zurück.
     *   **Diffusion**: ein weiches Glühen. Dunkle Bereiche breiten sich in helle aus.
     *   **Kontrastmaske**: öffnet große dunkle Bereiche, hält große helle zurück und erhält feine Details. In der Dunkelkammer entsteht dieser Effekt mit einer weichen, unscharfen Maske auf dem Negativ. Beim digitalen Abzug erreichen Fujifilm-Frontier-Scanner mit HyperTone einen ähnlichen Effekt. Bereiche weit vom mittleren Grau ändern sich am meisten, daher ändert sich ein kontrastarmes Bild wenig.
-*   **Global / R / G / B**: R, G oder B wendet die Gradationen nur auf eine Farbe an, für einen Farbstich, der in Schatten und Lichtern unterschiedlich ist.
 
 **Weißpunkt** und **Schwarzpunkt** findest du auf der Karte **Messung** im Tab Rolle ([§10.6](#106-metering-negative--positive)).
 
@@ -375,7 +377,7 @@ Gibt einem ausgeblichenen Dia seine Farbstoffschichten zurück. Die Karte ersche
 *   **Graumischung**: ändert, welchen Grautönen Schätzen vertraut. Ziehe den Regler, wenn die Farben nicht stimmen.
 *   **Crossover**: entfernt eine Farbverschiebung zwischen Schatten und Lichtern. Stelle ihn an einem Bild mit klaren Grautönen ein und klicke dann auf der Karte auf **Rolle**.
 
-<!-- panel:process src:2c179de9 -->
+<!-- panel:process src:60925755 -->
 ### 10.6 Messung: Negativ → Positiv
 
 Um ein Negativ in ein Positiv umzuwandeln, misst NegPy die dunkelsten und hellsten Stellen (Schwarz- und Weißpunkt) und die Farbe des Films. Diese Regler bestimmen, was NegPy misst.
@@ -390,7 +392,7 @@ Um ein Negativ in ein Positiv umzuwandeln, misst NegPy die dunkelsten und hellst
 *   **Dmin** / **Dmax** (Klappbereich Von Hand wählen): für ein Bild, das NegPy schlecht misst. Klicke **Dmin**, dann die Filmbasis oder den tiefsten Schatten, um den Schwarzpunkt zu setzen. Klicke **Dmax**, dann das hellste Licht, um den Weißpunkt zu setzen. Jedes **×** löscht seinen eigenen Punkt. Beide sind aus, solange das Bild auf dem Rollenmittelwert druckt.
 *   **Weißpunkt** / **Schwarzpunkt** (Klappbereich): verschieben den gemessenen Weiß- und Schwarzpunkt. Ein positiver Weißpunkt hellt den Abzug auf. Ein positiver Schwarzpunkt hebt die Schwarztöne an. **R / G / B** verschiebt nur eine Farbe.
 
-Ein **Dia** braucht keine Umkehrung: Die Tonwertregler formen das Bild direkt. Auto-Dichte und Auto-Gradation sind aus. Schalte sie für ein verblasstes Dia ein. Auf einem Dia legt Bereich zeichnen die Fläche fest, die Schätzen, Schleier entfernen, Farbstichentfernung, Auto-Dichte und Auto-Gradation messen. Zeichne ihn, bevor du auf Schätzen klickst. In Lightroom-Begriffen ist Belichtung die Abzugsdichte (niedriger ist heller), Kontrast die ISO-R-Gradation, und Schatten und Lichter sind die Dichte von Schatten und Lichtern.
+Ein **Dia** braucht keine Umkehrung: Die Tonwertregler formen das Bild direkt. Auto-Dichte und Auto-Gradation sind aus. Schalte sie für ein verblasstes Dia ein. Auf einem Dia legt Bereich zeichnen die Fläche fest, die Schätzen, Schleier entfernen, Farbstichentfernung, Auto-Dichte und Auto-Gradation messen. Zeichne ihn, bevor du auf Schätzen klickst.
 
 <!-- panel:baseline src:7fc2c469 -->
 ### 10.7 Rollenanalyse

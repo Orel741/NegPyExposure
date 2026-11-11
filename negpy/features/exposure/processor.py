@@ -249,6 +249,7 @@ class PhotometricProcessor:
             shadow_point=context.metrics.get("shadow_point"),
             midtone_gamma=mg,
             highlight_point=context.metrics.get("highlight_point"),
+            levels=(self.config.whites, self.config.blacks),
         )
         context.metrics["print_slopes"] = slopes
         hl_point = context.metrics.get("highlight_point")
@@ -379,6 +380,7 @@ class PhotometricProcessor:
             grade_map=grade_map,
             bpc=not self.config.paper_black,
             black_hold=black_hold_taper(self.config, paper),
+            brightness=self.config.brightness,
             toe_trims=(self.config.toe_trim_red, self.config.toe_trim_green, self.config.toe_trim_blue),
             shoulder_trims=(self.config.shoulder_trim_red, self.config.shoulder_trim_green, self.config.shoulder_trim_blue),
             snap_trims=(

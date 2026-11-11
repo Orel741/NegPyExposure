@@ -102,3 +102,60 @@ def test_a_fresh_frame_prints_on_the_scan_stock():
     scan = np.asarray(DarkroomEngine().process(img, cfg, source_hash="scan-default"))
     paper = replace(cfg, exposure=replace(cfg.exposure, paper_profile="neutral"))
     assert not np.allclose(scan, np.asarray(DarkroomEngine().process(img, paper, source_hash="scan-paper")))
+
+
+def _green(params, u):
+    slopes, pivots, curvs = params
+    return slopes[1] * (u - pivots[1]) + curvs[1] * u * u
+
+
+def test_whites_moves_the_white_end_and_holds_black():
+    c = effective_constants(SCAN)
+    d_max = float(c["d_max"])
+    base, lifted = _params(SCAN), _params(SCAN, levels=(0.5, 0.0))
+    black = next(u for u in np.linspace(0.0, 1.5, 3001) if _green(base, u) >= d_max)
+    assert _green(lifted, black) == pytest.approx(_green(base, black), abs=2e-3)
+    assert _green(lifted, 0.3) < _green(base, 0.3)
+
+
+def test_blacks_moves_the_black_end_and_holds_white():
+    base, lifted = _params(SCAN), _params(SCAN, levels=(0.0, 0.5))
+    white = next(u for u in np.linspace(1.5, -0.5, 4001) if _green(base, u) <= 0.0)
+    assert _green(lifted, white) == pytest.approx(_green(base, white), abs=2e-3)
+    assert _green(lifted, 0.8) < _green(base, 0.8)
+
+
+def test_neutral_levels_leave_the_curve_alone():
+    assert _params(SCAN, levels=(0.0, 0.0)) == _params(SCAN)
+    paper = PAPER_PROFILES["neutral"]
+    assert _params(paper, levels=(0.4, -0.2)) != _params(paper)
+
+
+def test_grade_turns_about_the_contrast_pivot():
+    c = effective_constants(SCAN)
+    target = float(c["d_max"]) * (1.0 - float(c["scan_contrast_pivot"]))
+    kw = dict(_ARGS, paper=SCAN, shadow_point=0.93, highlight_point=0.04)
+    base = per_channel_curve_params(115.0, 1.0, **kw)
+    u = base[1][1] + target / base[0][1]
+    for grade in (80.0, 150.0):
+        graded = per_channel_curve_params(grade, 1.0, **kw)
+        assert graded[0][1] != pytest.approx(base[0][1])
+        assert _green(graded, u) == pytest.approx(target, abs=1e-6)
+
+
+def test_brightness_scales_the_scan_gamma():
+    assert scan_gamma(SCAN, 0.5) < scan_gamma(SCAN) < scan_gamma(SCAN, -0.5)
+    assert scan_gamma(PAPER_PROFILES["neutral"], 0.5) == 0.0
+
+
+def test_brightness_lightens_the_midtones_and_holds_the_ends():
+    ramp = np.linspace(0.0, 1.0, 64, dtype=np.float32)
+    img = np.ascontiguousarray(np.repeat(ramp[None, :, None], 3, axis=2).repeat(4, axis=0))
+    slopes, pivots, _ = _params(_NEUTRAL_DYES)
+    kw = dict(params_r=(pivots[0], slopes[0]), params_g=(pivots[1], slopes[1]), params_b=(pivots[2], slopes[2]), paper=_NEUTRAL_DYES)
+    base = np.asarray(apply_characteristic_curve(img, **kw))
+    bright = np.asarray(apply_characteristic_curve(img, brightness=0.5, **kw))
+    mid = (base[0, :, 1] > 0.1) & (base[0, :, 1] < 0.6)
+    assert mid.any() and np.all(bright[0, mid, 1] > base[0, mid, 1])
+    assert bright[0, :, 1].min() == pytest.approx(base[0, :, 1].min(), abs=1e-4)
+    assert bright[0, :, 1].max() == pytest.approx(base[0, :, 1].max(), abs=1e-2)

@@ -256,10 +256,9 @@ def test_localized_guides_cover_every_panel_and_fall_back(locale: str, word: str
 def test_chinese_command_search_keeps_english_aliases(chinese: None) -> None:
     from negpy.desktop.view.widgets.command_palette import make_entry, rank
 
-    entry = make_entry("slider", i18n.tr("ISO-R Grade"), i18n.tr("Tone"), object())
+    entry = make_entry("slider", i18n.tr("Contrast"), i18n.tr("Tone"), object())
     assert rank([entry], "对比度") == [entry]
     assert rank([entry], "contrast") == [entry]
-    assert rank([entry], "反差") == [entry]
 
 
 @pytest.mark.parametrize("locale,query", [("ja", "コントラスト"), ("ko", "대비")])
@@ -269,7 +268,7 @@ def test_localized_command_search_keeps_english_aliases(locale: str, query: str)
     previous = i18n.language()
     try:
         i18n.configure(locale)
-        entry = make_entry("slider", i18n.tr("ISO-R Grade"), i18n.tr("Tone"), object())
+        entry = make_entry("slider", i18n.tr("Contrast"), i18n.tr("Tone"), object())
         assert rank([entry], query) == [entry]
         assert rank([entry], "contrast") == [entry]
     finally:
@@ -470,7 +469,7 @@ buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
 assert buttons.button(QDialogButtonBox.StandardButton.Cancel).text().replace('&', '') == expected['cancel']
 from negpy.desktop.view.widgets.command_palette import make_entry, rank
 from negpy.kernel.system.i18n import tr
-entry = make_entry('slider', tr('ISO-R Grade'), tr('Tone'), object())
-assert rank([entry], tr('ISO-R Grade')) == [entry]
+entry = make_entry('slider', tr('Contrast'), tr('Tone'), object())
+assert rank([entry], tr('Contrast')) == [entry]
 assert rank([entry], 'contrast') == [entry]
 """

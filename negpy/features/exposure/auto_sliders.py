@@ -79,7 +79,9 @@ def _scan_shown(exposure: ExposureConfig, process_mode: Optional[str], metrics: 
 
 def print_shown_values(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Dict[str, float]:
     """Manual-equivalent value of every slider an auto drives, for the autos that are on
-    and metered. Grade is the ISO R that prints the auto's slope on the frame's own range."""
+    and metered. Grade is the ISO R that prints the auto's slope on the frame's own range.
+    Whites and Blacks act after either, so the values leave them out."""
+    exposure = replace(exposure, whites=0.0, blacks=0.0)
     shown: Dict[str, float] = {}
     scan = _scan_shown(exposure, process_mode, metrics)
     shift = _density_shift(exposure, process_mode, metrics)
@@ -102,6 +104,7 @@ def print_stored_value(
 ) -> float:
     """Inverse of print_shown_values for one field. Where Shadow Reach floors the slope,
     a softer grade is stored but does not print."""
+    exposure = replace(exposure, whites=0.0, blacks=0.0)
     scan = _scan_shown(exposure, process_mode, metrics)
     if field == "density":
         if scan is not None:

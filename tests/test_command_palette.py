@@ -18,8 +18,8 @@ def _names(entries):
 
 
 def test_a_synonym_ranks_its_darkroom_names_first():
-    entries = [make_entry("slider", n, "Exposure › Tone", None) for n in ("Contrast Mask", "ISO-R Grade", "Toe")]
-    assert _names(rank(entries, "contrast")) == ["ISO-R Grade", "Contrast Mask"]
+    entries = [make_entry("slider", n, "Exposure › Tone", None) for n in ("Contrast Mask", "Contrast", "Toe")]
+    assert _names(rank(entries, "grade")) == ["Contrast"]
 
 
 def test_exact_name_beats_prefix_beats_substring():

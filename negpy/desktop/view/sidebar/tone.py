@@ -1,9 +1,8 @@
 from negpy.kernel.system.i18n import tr
-from dataclasses import replace
 
 from PyQt6.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout
 
-from negpy.desktop.auto_sliders import grade_softest_reached, shown_values, stored_value
+from negpy.desktop.auto_sliders import grade_softest_reached, shown_values
 from negpy.desktop.view.confirm import warn_targets_affect_unbaked
 from negpy.desktop.view.shortcut_registry import tooltip_with_shortcut
 from negpy.desktop.view.sidebar.base import BaseSidebar, SliderPage
@@ -11,14 +10,48 @@ from negpy.desktop.view.styles.templates import ICON_BUTTON_WIDTH, TEST_STRIP_SW
 from negpy.desktop.view.styles.theme import THEME
 from negpy.desktop.view.widgets.segmented_choice import SegmentedChoice, ToggleMenuButton
 from negpy.desktop.view.widgets.collapsible import hidden_by_gating
-from negpy.desktop.view.widgets.fold import group_fold, rail_fold
+from negpy.desktop.view.widgets.fold import group_fold
 from negpy.desktop.view.widgets.sliders import CompactSlider
 from negpy.features.hdr.models import hdr_active
 from negpy.features.exposure.auto_sliders import NEUTRAL
+from negpy.features.exposure.papers import effective_paper_profile
 from negpy.features.exposure.models import EXPOSURE_CONSTANTS, TUNABLE_TARGETS, apply_targets
 
 _ISO_R_MIN = float(EXPOSURE_CONSTANTS["iso_r_min"])
 _ISO_R_MAX = float(EXPOSURE_CONSTANTS["iso_r_max"])
+
+# Each simple slider runs -100 to 100 about the field's neutral, and positive is brighter or
+# more contrast: config units per slider unit, by field.
+_SCALE_TRAVEL = 100.0
+_SIMPLE_SCALES = {
+    "density": -0.5 / _SCALE_TRAVEL,
+    "grade": -(_ISO_R_MAX - NEUTRAL["grade"]) / _SCALE_TRAVEL,
+    "shadow_density": -0.4 / _SCALE_TRAVEL,
+    "highlight_density": -0.6 / _SCALE_TRAVEL,
+    "whites": 1.0 / _SCALE_TRAVEL,
+    "blacks": 1.0 / _SCALE_TRAVEL,
+    "brightness": 1.0 / _SCALE_TRAVEL,
+}
+_SIMPLE_NEUTRAL = {**NEUTRAL, "whites": 0.0, "blacks": 0.0, "brightness": 0.0}
+_FIELD_RANGE = {"density": (0.0, 2.0), "grade": (_ISO_R_MIN, _ISO_R_MAX)}
+
+
+def simple_value(field: str, stored: float) -> float:
+    """The slider position of a stored value."""
+    pos = (float(stored) - _SIMPLE_NEUTRAL[field]) / _SIMPLE_SCALES[field]
+    return max(-_SCALE_TRAVEL, min(_SCALE_TRAVEL, pos))
+
+
+def simple_stored(field: str, pos: float) -> float:
+    """The stored value of a slider position."""
+    value = _SIMPLE_NEUTRAL[field] + float(pos) * _SIMPLE_SCALES[field]
+    lo, hi = _FIELD_RANGE.get(field, (-1.0, 1.0))
+    return max(lo, min(hi, value))
+
+
+def _simple_slider(label: str) -> CompactSlider:
+    return CompactSlider(label, -_SCALE_TRAVEL, _SCALE_TRAVEL, 0.0, step=1.0, has_neutral=True)
+
 
 _CH_SUFFIX = ("red", "green", "blue")
 _CH_LABEL = ("", " R", " G", " B")
@@ -55,16 +88,23 @@ def channel_pages(chooser: SegmentedChoice, config: object, rows) -> tuple[Slide
 
 
 class ToneSidebar(BaseSidebar):
-    """Print/zone density, Grade, split Grade, Preflash, Diffusion and Contrast Mask, with a
-    [Global/R/G/B] channel selector scoping Grade and split Grade to per-layer trims
-    (crossover correction)."""
+    """Exposure, Brightness, Contrast, Lights, Darks, Whites and Blacks, each about the value
+    Auto meters. The Advanced fold holds split Grade, the per-layer Grade trims behind a
+    [Global/R/G/B] channel selector, Preflash, Diffusion and Contrast Mask."""
 
     def _init_ui(self) -> None:
         conf = self.state.config.exposure
 
-        self.density_slider = CompactSlider(tr("Print Density"), 0.0, 2.0, conf.density)
-        # Travel matches the kernel's grade clamp, so the slider never offers a grade it would clip.
-        self.grade_slider = CompactSlider(tr("ISO-R Grade"), _ISO_R_MIN, _ISO_R_MAX, conf.grade, step=1.0, inverted=True, unit=" R")
+        self.density_slider = _simple_slider(tr("Exposure"))
+        self.brightness_slider = _simple_slider(tr("Brightness"))
+        self.brightness_slider.setToolTip(tr("Lightens or darkens the midtones, and leaves black and white where they are."))
+        self.grade_slider = _simple_slider(tr("Contrast"))
+        self.highlight_density_slider = _simple_slider(tr("Lights"))
+        self.shadow_density_slider = _simple_slider(tr("Darks"))
+        self.whites_slider = _simple_slider(tr("Whites"))
+        self.whites_slider.setToolTip(tr("Moves the white point: positive brightens the lightest tones, and black stays where it is."))
+        self.blacks_slider = _simple_slider(tr("Blacks"))
+        self.blacks_slider.setToolTip(tr("Moves the black point: negative deepens the darkest tones, and white stays where it is."))
         self.grade_trim_slider = CompactSlider(tr("Grade"), -30.0, 30.0, 0.0, step=1.0, inverted=True, unit=" R")
         self.grade_trim_slider.setToolTip(
             tr("Contrast of this color layer only, for a color cast that differs between shadows and highlights.")
@@ -123,13 +163,11 @@ class ToneSidebar(BaseSidebar):
         self.test_strip_btn.setFixedWidth(ICON_BUTTON_WIDTH)
         self.test_strip_btn.clicked.connect(lambda checked: self.controller.toggle_test_strip(force=checked))
 
-        ch_row = QHBoxLayout()
-        ch_row.addWidget(self.ch_btn, 1)
-        # Holds the icons at the right edge when B&W hides the selector.
-        ch_row.addStretch()
-        ch_row.addWidget(self.auto_btn)
-        ch_row.addWidget(self.test_strip_btn)
-        self.layout.addLayout(ch_row)
+        tools_row = QHBoxLayout()
+        tools_row.addStretch()
+        tools_row.addWidget(self.auto_btn)
+        tools_row.addWidget(self.test_strip_btn)
+        self.layout.addLayout(tools_row)
         # Disabled widgets get no hover, so the reason hangs off the hint under them.
         self.auto_merged_hint = hint_label(tr("Not applied to a merged bracket."))
         self.auto_merged_hint.setToolTip(
@@ -138,29 +176,24 @@ class ToneSidebar(BaseSidebar):
         self.auto_merged_hint.setVisible(False)
         self.layout.addWidget(self.auto_merged_hint)
         self.layout.addWidget(self.density_slider)
-
-        self.shadow_density_slider = CompactSlider(tr("Shadows Density"), -1.0, 1.0, conf.shadow_density)
-        self.highlight_density_slider = CompactSlider(tr("Highlights Density"), -1.0, 1.0, conf.highlight_density)
-        self.layout.addWidget(rail_fold("tone_density", self.density_slider, self.shadow_density_slider, self.highlight_density_slider))
-
-        grade_row = QVBoxLayout()
-        grade_row.addWidget(self.grade_slider)
-        grade_row.addWidget(self.grade_trim_slider)
-        self.grade_softest_hint = hint_label(tr("Flat negative: this is the softest Grade it can print."), kind="warning")
+        self.layout.addWidget(self.brightness_slider)
+        self.layout.addWidget(self.grade_slider)
+        self.grade_softest_hint = hint_label(tr("Flat negative: this is the lowest Contrast it can print."), kind="warning")
         self.grade_softest_hint.setToolTip(
-            wrap_tooltip(tr("This negative has so little contrast that a softer Grade prints the same as this one."))
+            wrap_tooltip(tr("This negative has so little contrast that a lower Contrast prints the same as this one."))
         )
         self.grade_softest_hint.setVisible(False)
-        grade_row.addWidget(self.grade_softest_hint)
-        self.layout.addLayout(grade_row)
+        self.layout.addWidget(self.grade_softest_hint)
+        for slider in (self.highlight_density_slider, self.shadow_density_slider, self.whites_slider, self.blacks_slider):
+            self.layout.addWidget(slider)
 
         self.shadow_grade_slider = CompactSlider(tr("Shadows Grade"), -50.0, 50.0, conf.shadow_grade, step=1.0, inverted=True, unit=" R")
         self.highlight_grade_slider = CompactSlider(
             tr("Highlights Grade"), -50.0, 50.0, conf.highlight_grade, step=1.0, inverted=True, unit=" R"
         )
-        self.split_grade_fold = rail_fold("tone_split_grade", self.grade_slider, self.shadow_grade_slider, self.highlight_grade_slider)
-        self.split_grade_fold.attach(self.grade_trim_slider)
-        self.layout.addWidget(self.split_grade_fold)
+        self.split_grade = QVBoxLayout()
+        for slider in (self.grade_trim_slider, self.shadow_grade_slider, self.highlight_grade_slider):
+            self.split_grade.addWidget(slider)
 
         self.contrast_mask_slider = CompactSlider(tr("Contrast Mask"), 0.0, 1.0, conf.contrast_mask_strength)
         self.contrast_mask_slider.setToolTip(
@@ -172,21 +205,31 @@ class ToneSidebar(BaseSidebar):
         self.preflash_slider = CompactSlider(tr("Preflash"), 0.0, 1.0, conf.preflash)
         self.diffusion_slider = CompactSlider(tr("Diffusion"), 0.0, 1.0, conf.diffusion)
         self.diffusion_slider.setToolTip(tr("Diffusion: a soft glow that spreads dark areas into bright ones and softens edges, off at 0."))
-        aids_header, self.aids_fold = group_fold(
-            "tone_aids", tr("Printing Aids"), self.preflash_slider, self.diffusion_slider, self.contrast_mask_slider
+        advanced_header, self.advanced_fold = group_fold(
+            "tone_advanced",
+            tr("Advanced"),
+            self.ch_btn,
+            self.split_grade,
+            self.preflash_slider,
+            self.diffusion_slider,
+            self.contrast_mask_slider,
         )
-        self.layout.addLayout(aids_header)
-        self.layout.addWidget(self.aids_fold)
+        self.layout.addLayout(advanced_header)
+        self.layout.addWidget(self.advanced_fold)
 
         self.layout.addStretch()
 
         # Global-only controls, greyed while a channel page is active.
         self._global_only = (
             self.density_slider,
+            self.brightness_slider,
+            self.grade_slider,
             self.test_strip_btn,
             self.auto_btn,
             self.shadow_density_slider,
             self.highlight_density_slider,
+            self.whites_slider,
+            self.blacks_slider,
             # A pan masking film is neutral: the mask is one plane subtracted as equal
             # density from every layer, so it has no per-channel form to trim.
             self.contrast_mask_slider,
@@ -223,6 +266,7 @@ class ToneSidebar(BaseSidebar):
         """Freeze this frame's metered Auto Density and Auto Grade into its settings, then turn both off.
         The baked values are the sliders' shown values, so the print does not move."""
         shown = shown_values(self.state.config, self._meters())
+        # The baked Density and Grade hold the levels, and Whites and Blacks stay on top of them.
         changes: dict = dict(shown)
         changes["auto_exposure"] = False
         changes["auto_normalize_contrast"] = False
@@ -233,7 +277,7 @@ class ToneSidebar(BaseSidebar):
 
     def slider_pages(self) -> tuple[SliderPage, ...]:
         rows = (
-            (tr("Grade"), self.grade_slider, self.grade_trim_slider, "grade"),
+            (tr("Grade"), self.grade_trim_slider, self.grade_trim_slider, "grade"),
             (tr("Shadows Grade"), self.shadow_grade_slider, self.shadow_grade_slider, "shadow_grade"),
             (tr("Highlights Grade"), self.highlight_grade_slider, self.highlight_grade_slider, "highlight_grade"),
         )
@@ -341,35 +385,32 @@ class ToneSidebar(BaseSidebar):
     def _driven_sliders(self) -> dict:
         return {
             "density": self.density_slider,
+            "brightness": self.brightness_slider,
             "grade": self.grade_slider,
-            "shadow_density": self.shadow_density_slider,
             "highlight_density": self.highlight_density_slider,
+            "shadow_density": self.shadow_density_slider,
+            "whites": self.whites_slider,
+            "blacks": self.blacks_slider,
         }
 
     def _meters(self) -> dict:
         return self.state.auto_meters.get(self.state.current_file_hash or "", {})
 
     def _sync_driven(self) -> None:
-        """Sliders an auto drives show meter + offset, and reset to the meter's own choice."""
-        config, meters = self.state.config, self._meters()
-        shown = shown_values(config, meters)
+        """Each simple slider shows its stored value's distance from neutral."""
+        config = self.state.config
         for field, slider in self._driven_sliders().items():
-            default = NEUTRAL[field]
-            if field in shown:
-                neutral = replace(config, exposure=replace(config.exposure, **{field: NEUTRAL[field]}))
-                default = shown_values(neutral, meters)[field]
             slider.blockSignals(True)
-            slider.set_default(default)
-            slider.setValue(shown.get(field, getattr(config.exposure, field)))
+            slider.setValue(simple_value(field, getattr(config.exposure, field)))
             slider.blockSignals(False)
-        self.grade_softest_hint.setVisible(self._channel_index() == 0 and grade_softest_reached(config, meters))
+        self.grade_softest_hint.setVisible(grade_softest_reached(config, self._meters()))
 
     def _set_driven(self, field: str, value: float, persist: bool) -> None:
-        # A value at the slider's default is a reset: back to the neutral offset exactly.
+        # A value at the slider's default is a reset: back to the neutral exactly.
         if self._driven_sliders()[field].is_default(value):
-            stored = NEUTRAL[field]
+            stored = _SIMPLE_NEUTRAL[field]
         else:
-            stored = stored_value(self.state.config, self._meters(), field, value)
+            stored = simple_stored(field, value)
         self.update_config_section("exposure", render=True, persist=persist, readback_metrics=persist, **{field: stored})
 
     def sync_ui(self) -> None:
@@ -391,8 +432,11 @@ class ToneSidebar(BaseSidebar):
             # contrast about the same centres and the transfer curve has no per-zone slope to rotate.
             # The transfer curve takes no dodge/burn map, and the mask rides it; it takes no
             # diffusion plane or flash either, and always fades a lift at the bottom of its window.
-            for w in (self.split_grade_fold.content, self.aids_fold.content, self.hold_black_action):
+            for w in (self.advanced_fold.content, self.hold_black_action, self.whites_slider, self.blacks_slider):
                 w.setVisible(not transfer)
+            # Brightness is the scan transfer's exponent, which a paper does not have.
+            paper = effective_paper_profile(conf.paper_profile, proc.process_mode)
+            self.brightness_slider.setVisible(not transfer and paper.scan)
             # Per-layer trims are meaningless on a single-emulsion B&W paper.
             is_bw = is_mono(self.state.config.process)
             if is_bw:
@@ -402,7 +446,6 @@ class ToneSidebar(BaseSidebar):
             idx = self._channel_index()
             global_mode = idx == 0
             suffix = _CH_LABEL[idx]
-            self.grade_slider.setVisible(global_mode)
             self.grade_trim_slider.setVisible(not global_mode)
             self.shadow_grade_slider.label.setText(tr("Shadows Grade") + suffix)
             self.highlight_grade_slider.label.setText(tr("Highlights Grade") + suffix)
@@ -443,10 +486,13 @@ class ToneSidebar(BaseSidebar):
         for w in (
             self.ch_btn,
             self.density_slider,
+            self.brightness_slider,
             self.grade_slider,
             self.grade_trim_slider,
             self.shadow_density_slider,
             self.highlight_density_slider,
+            self.whites_slider,
+            self.blacks_slider,
             self.shadow_grade_slider,
             self.highlight_grade_slider,
             self.contrast_mask_slider,

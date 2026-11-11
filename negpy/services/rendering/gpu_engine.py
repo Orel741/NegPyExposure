@@ -2171,6 +2171,7 @@ class GPUEngine:
             shadow_point=shadow_point,
             midtone_gamma=mg,
             highlight_point=highlight_point,
+            levels=(exp.whites, exp.blacks),
         )
         hl_auto = (
             highlight_hold_offset(
@@ -2370,7 +2371,7 @@ class GPUEngine:
             # Print-stock LUT: xyz = e_max (0 = no LUT), w = the black that BPC maps to 0.
             + struct.pack("ffff", *lut_row)
             # w = the scan transfer's exponent (0 = a paper); a LUT stock ignores it.
-            + struct.pack("ffff", *collapse_weights(settings.process, exp), scan_gamma(paper))
+            + struct.pack("ffff", *collapse_weights(settings.process, exp), scan_gamma(paper, exp.brightness))
         )
 
         cls = float(settings.lab.clahe_strength)

@@ -375,10 +375,10 @@ class TestZonePlacementLifecycle(unittest.TestCase):
         self.assertEqual(self.controller.zone_solve_caption(), "")
         self._place(0.5, 0.2, zone=7.0)
         self.controller.zone_pin_readouts()
-        self.assertEqual(self.controller.zone_solve_caption(), "Solving Print Density")
+        self.assertEqual(self.controller.zone_solve_caption(), "Solving Exposure")
         self._place(0.5, 0.8, zone=3.0)
         self.controller.zone_pin_readouts()
-        self.assertEqual(self.controller.zone_solve_caption(), "Solving Print Density + ISO-R Grade")
+        self.assertEqual(self.controller.zone_solve_caption(), "Solving Exposure + Contrast")
 
     def test_a_third_pin_extends_the_caption(self):
         self._place(0.5, 0.2, zone=7.0)
@@ -386,7 +386,7 @@ class TestZonePlacementLifecycle(unittest.TestCase):
         self._place(0.5, 0.5, zone=6.0)
         self.controller.zone_pin_readouts()
         caption = self.controller.zone_solve_caption()
-        self.assertTrue(caption.startswith("Solving Print Density + ISO-R Grade"), caption)
+        self.assertTrue(caption.startswith("Solving Exposure + Contrast"), caption)
 
     def test_a_three_pin_apply_writes_the_solved_knee(self):
         self._place(0.5, 0.2, zone=7.0)

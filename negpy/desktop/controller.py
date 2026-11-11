@@ -4032,9 +4032,9 @@ class AppController(QObject):
         sol = self._pin_solution
         if sol is None or not self.state.zone_pins:
             return ""
-        controls = [tr("Print Density")]
+        controls = [tr("Exposure")]
         if "grade" in sol.fields:
-            controls.append(tr("ISO-R Grade"))
+            controls.append(tr("Contrast"))
         if sol.knee:
             controls.append(_KNEE_LABELS[sol.knee])
         return tr("Solving {controls}", controls=" + ".join(controls))

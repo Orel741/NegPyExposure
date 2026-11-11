@@ -449,10 +449,13 @@ def effective_paper_profile(key: str, process_mode: str | None) -> PaperProfile:
     return PAPER_PROFILES[DEFAULT_PROFILE_KEY]
 
 
-def scan_gamma(paper: PaperProfile | None) -> float:
-    """The scan transfer's exponent for the kernels: the working TRC's inverse, so the encoded
-    code is linear in print density. 0 for a paper."""
-    return _WORKING_GAMMA if paper is not None and paper.scan else 0.0
+def scan_gamma(paper: PaperProfile | None, brightness: float = 0.0) -> float:
+    """The scan transfer's exponent for the kernels: the working TRC's inverse at neutral
+    Brightness, so the encoded code is linear in print density. 0 for a paper."""
+    if paper is None or not paper.scan:
+        return 0.0
+    stops = float(EXPOSURE_CONSTANTS["scan_brightness_stops"])
+    return _WORKING_GAMMA * 2.0 ** (-stops * max(-1.0, min(1.0, float(brightness))))
 
 
 def effective_constants(paper: PaperProfile | None) -> Dict[str, Any]:

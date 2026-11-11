@@ -60,6 +60,12 @@ class ExposureConfig:
     # Ranges are asymmetric: density is log10, so an equal ΔD reads smaller near d_max.
     shadow_density: float = 0.0
     highlight_density: float = 0.0
+    # Levels on the print, -1 to 1: positive Whites brightens the light end and holds black,
+    # positive Blacks lifts the dark end and holds white (levels_trim).
+    whites: float = 0.0
+    blacks: float = 0.0
+    # Midtone brightness of a scan profile, -1 to 1; the ends hold (papers.scan_gamma).
+    brightness: float = 0.0
     # A shadow lift fades to nothing at paper black, so the black point barely moves.
     hold_black: bool = False
     # Tone mask: lifts large dark areas and holds back large bright ones, more the farther they sit
@@ -299,6 +305,13 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # Outside 0 to 1 clips: the tail prints past black or white.
     "scan_black_level": -0.05,
     "scan_white_level": 1.15,
+    # The code, as a fraction of the range, that a scan profile's Grade turns about.
+    "scan_contrast_pivot": 0.45,
+    # Whites and Blacks at full travel move their end by this fraction of the code range.
+    "levels_white_span": 0.3,
+    "levels_black_span": 0.15,
+    # Brightness at full travel scales the scan exponent by 2 to this power.
+    "scan_brightness_stops": 0.8,
     # Preflash threshold: the density above paper white that the ISO R range starts at.
     "preflash_threshold_density": 0.04,
     # Flat / digital-intermediate master (RenderIntent.FLAT). A log-video master:
