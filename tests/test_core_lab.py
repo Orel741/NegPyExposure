@@ -20,7 +20,7 @@ def test_chroma_denoise_output_is_pinned():
         for sigma in [0.5, 2.0, 6.0]:
             img = rng.random((*shape, 3), dtype=np.float32)
             outs.append(negpy_core.chroma_denoise(img, sigma, gaussian_kernel_1d(sigma), *WORKING_LAB))
-    assert digest(*outs) == "8c4dce1aab011563c1fcc53782cc17515c971fddf155186690c55f427e0e2552"
+    assert digest(*outs) == "90bd39f7ab3c9800bc0c32dbb0a5a562b6b4d6d1add76f247ed4742a2c27393d"
 
 
 def test_glow_and_halation_output_is_pinned():

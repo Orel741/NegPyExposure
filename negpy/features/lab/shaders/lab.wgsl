@@ -351,8 +351,9 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     var color = load_lin(coords);
 
     // 1. Chroma Denoise — mirrors apply_chroma_denoise in logic.py. chroma_tex holds the
-    // low-pass a*/b*; chroma above it is kept only where the low band's own gradient marks
-    // a color edge (central differences, clamped like the CPU's edge-replicated pad).
+    // low-pass a*/b*/L*; chroma above it is kept only where the low band's own gradient marks
+    // a color edge (central differences, clamped like the CPU's edge-replicated pad). A pixel
+    // darker than the low-pass L* takes the low a*/b* scaled by the L* ratio.
     if (params.chroma_radius_px > 0.0) {
         let lo = vec2<i32>(0);
         let hi = vec2<i32>(dims) - 1;
@@ -364,7 +365,11 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         let g = sqrt(dot(gx, gx) + dot(gy, gy)) * params.chroma_denoise * params.scale_factor;
         let keep = smoothstep(CHROMA_EDGE_LO, CHROMA_EDGE_HI, g);
         let current_lab = rgb_to_lab(color);
-        let ab = low + keep * (current_lab.yz - low);
+        let low_l = textureLoad(chroma_tex, coords, 0).z;
+        var shade = 1.0;
+        if (low_l > current_lab.x && low_l > 0.0) { shade = max(current_lab.x, 0.0) / low_l; }
+        let low_ab = low * shade;
+        let ab = low_ab + keep * (current_lab.yz - low_ab);
         color = lab_to_rgb(vec3<f32>(current_lab.x, ab.x, ab.y));
     }
 

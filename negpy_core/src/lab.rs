@@ -184,6 +184,8 @@ const CHROMA_EDGE_HI: f64 = 2.5;
 
 /// `apply_chroma_denoise` once sigma is known: the a*/b* band above the Gaussian low pass `k`
 /// (reflect-101 edges) is kept only where the low band has a color edge (`chroma_edge_keep`).
+/// A pixel darker than its low-pass L* takes the low band scaled by the L* ratio: a*/b* grow
+/// with lightness, and a near-black pixel given its neighbors' a*/b* leaves the gamut.
 pub fn chroma_denoise(
     src: &[f32],
     (h, w): (usize, usize),
@@ -195,14 +197,17 @@ pub fn chroma_denoise(
     let n = h * w;
     let mut lab = vec![0f32; n * 3];
     color::rgb_to_lab(src, &mut lab, to_lab);
-    let ab: Vec<f32> = lab.par_chunks(3).flat_map_iter(|p| [p[1], p[2]]).collect();
-    let mut low = vec![0f32; n * 2];
-    filter::sep_filter2d(&ab, &mut low, (h, w, 2), (k, k), Border::Reflect101)?;
+    let lab_ab: Vec<f32> = lab
+        .par_chunks(3)
+        .flat_map_iter(|p| [p[1], p[2], p[0]])
+        .collect();
+    let mut low = vec![0f32; n * 3];
+    filter::sep_filter2d(&lab_ab, &mut low, (h, w, 3), (k, k), Border::Reflect101)?;
     let span = CHROMA_EDGE_HI - CHROMA_EDGE_LO;
     let (scale, shift) = ((sigma / span) as f32, (CHROMA_EDGE_LO / span) as f32);
     lab.par_chunks_mut(w * 3).enumerate().for_each(|(y, out)| {
         let (up, down) = (y.saturating_sub(1), (y + 1).min(h - 1));
-        let at = |r: usize, x: usize| &low[(r * w + x) * 2..][..2];
+        let at = |r: usize, x: usize| &low[(r * w + x) * 3..][..2];
         for (x, p) in out.as_chunks_mut::<3>().0.iter_mut().enumerate() {
             let (left, right) = (at(y, x.saturating_sub(1)), at(y, (x + 1).min(w - 1)));
             let (top, bottom) = (at(up, x), at(down, x));
@@ -219,9 +224,15 @@ pub fn chroma_denoise(
             let t = clip(g, 0.0, 1.0);
             let keep = t * t * (3.0 - 2.0 * t);
             let i = y * w + x;
+            let l_low = low[i * 3 + 2];
+            let shade = if l_low > p[0] && l_low > 0.0 {
+                p[0].max(0.0) / l_low
+            } else {
+                1.0
+            };
             for c in 0..2 {
-                let lo = low[i * 2 + c];
-                let mut v = ab[i * 2 + c] - lo;
+                let lo = low[i * 3 + c] * shade;
+                let mut v = lab_ab[i * 3 + c] - lo;
                 v *= keep;
                 p[1 + c] = v + lo;
             }
