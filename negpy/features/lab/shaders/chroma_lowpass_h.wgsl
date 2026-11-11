@@ -1,6 +1,6 @@
 // Horizontal half of the Chroma Denoise low-pass on CIELAB a*/b*. Taps come from
 // gaussian_kernel_1d in features/lab/logic.py, uploaded verbatim (chroma_k buffer), so the
-// kernel matches the CPU cv2.sepFilter2D call. Writes (h-blurred a*, h-blurred b*, 0, 0);
+// kernel matches the CPU cv2.sepFilter2D call. Writes (h-blurred a*, b*, L*, 0);
 // chroma_lowpass_v.wgsl finishes the blur and lab.wgsl reads the result.
 struct LabUniforms {
     sharpen: f32,
@@ -28,8 +28,8 @@ fn oetf_decode(c: vec3<f32>) -> vec3<f32> {
     return pow(e, vec3<f32>(2.19921875));
 }
 
-// CIELAB a*/b* of linear Adobe RGB (D65) — the chroma half of rgb_to_lab in lab.wgsl.
-fn lab_ab(rgb: vec3<f32>) -> vec2<f32> {
+// CIELAB (a*, b*, L*) of linear Adobe RGB (D65), as rgb_to_lab in lab.wgsl.
+fn lab_abl(rgb: vec3<f32>) -> vec3<f32> {
     let r = max(rgb.r, 0.0);
     let g = max(rgb.g, 0.0);
     let b = max(rgb.b, 0.0);
@@ -39,7 +39,7 @@ fn lab_ab(rgb: vec3<f32>) -> vec2<f32> {
     if (x > 0.008856) { x = pow(x, 1.0/3.0); } else { x = (7.787 * x) + (16.0 / 116.0); }
     if (y > 0.008856) { y = pow(y, 1.0/3.0); } else { y = (7.787 * y) + (16.0 / 116.0); }
     if (z > 0.008856) { z = pow(z, 1.0/3.0); } else { z = (7.787 * z) + (16.0 / 116.0); }
-    return vec2<f32>(500.0 * (x - y), 200.0 * (y - z));
+    return vec3<f32>(500.0 * (x - y), 200.0 * (y - z), 116.0 * y - 16.0);
 }
 
 // cv2's default border mode (BORDER_REFLECT_101) — mirrors the CPU blur.
@@ -57,10 +57,10 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let coords = vec2<i32>(i32(gid.x), i32(gid.y));
 
     let r = i32(params.chroma_radius_px);
-    var acc = vec2<f32>(0.0);
+    var acc = vec3<f32>(0.0);
     for (var i = -r; i <= r; i++) {
         let sx = reflect_101(coords.x + i, i32(dims.x));
-        acc += lab_ab(oetf_decode(textureLoad(input_tex, vec2<i32>(sx, coords.y), 0).rgb)) * kernel_w[u32(i + r)];
+        acc += lab_abl(oetf_decode(textureLoad(input_tex, vec2<i32>(sx, coords.y), 0).rgb)) * kernel_w[u32(i + r)];
     }
-    textureStore(output_tex, coords, vec4<f32>(acc, 0.0, 0.0));
+    textureStore(output_tex, coords, vec4<f32>(acc, 0.0));
 }

@@ -1,4 +1,4 @@
-// Vertical half of the Chroma Denoise low-pass — blurs the (a*, b*) of the
+// Vertical half of the Chroma Denoise low-pass — blurs the (a*, b*, L*) of the
 // chroma_lowpass_h.wgsl output with the same shared taps (chroma_k buffer).
 struct LabUniforms {
     sharpen: f32,
@@ -35,10 +35,10 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let coords = vec2<i32>(i32(gid.x), i32(gid.y));
 
     let r = i32(params.chroma_radius_px);
-    var acc = vec2<f32>(0.0);
+    var acc = vec3<f32>(0.0);
     for (var j = -r; j <= r; j++) {
         let sy = reflect_101(coords.y + j, i32(dims.y));
-        acc += textureLoad(input_tex, vec2<i32>(coords.x, sy), 0).xy * kernel_w[u32(j + r)];
+        acc += textureLoad(input_tex, vec2<i32>(coords.x, sy), 0).xyz * kernel_w[u32(j + r)];
     }
-    textureStore(output_tex, coords, vec4<f32>(acc, 0.0, 0.0));
+    textureStore(output_tex, coords, vec4<f32>(acc, 0.0));
 }

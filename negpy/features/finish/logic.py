@@ -97,6 +97,19 @@ def apply_carrier(
     )
 
 
+# Scene-linear luma band where a scan stock's deepest tones converge on neutral, as paper's do near
+# its maximum density: fully neutral below LO, untouched above HI. Codes 0.04 and 0.10 under the
+# working TRC. Mirrored in shaders/finish.wgsl.
+NEUTRAL_BLACK_LO = 0.0008426052
+NEUTRAL_BLACK_HI = 0.0063209339
+
+
+def neutral_black(img: ImageBuffer) -> ImageBuffer:
+    """Each pixel moved toward its own luma, fully below NEUTRAL_BLACK_LO and not at all above
+    NEUTRAL_BLACK_HI, so near-black carries no color. Luma holds."""
+    return ensure_image(negpy_core.neutral_black(np.ascontiguousarray(img, dtype=np.float32), NEUTRAL_BLACK_LO, NEUTRAL_BLACK_HI))
+
+
 def apply_vignette(img: ImageBuffer, stops: float, size: float, roundness: float = 0.0) -> ImageBuffer:
     """
     Edge burn / hold-back as a true exposure change in scene-linear.

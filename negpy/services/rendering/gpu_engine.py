@@ -20,7 +20,8 @@ from negpy.features.exposure.analysis import (
     WAVEFORM_COLS,
 )
 from negpy.features.finish.logic import carrier_profiles, linear_carrier_tone
-from negpy.features.finish.processor import carrier_width_px, rebate_tone
+from negpy.features.finish.logic import NEUTRAL_BLACK_HI, NEUTRAL_BLACK_LO
+from negpy.features.finish.processor import carrier_width_px, neutral_blacks_for, rebate_tone
 from negpy.features.exposure import models as exposure_models
 from negpy.features.exposure.normalization import (
     LogNegativeBounds,
@@ -411,7 +412,7 @@ class GPUEngine:
             "lith": 64,
             "cyanotype": 64,
             "sabattier": 32,
-            "toning": 64,
+            "toning": 80,
             "finish": 60,
             "layout": 48,
             "density_hist": 48,
@@ -2528,6 +2529,7 @@ class GPUEngine:
                 float(settings.toning.vanadium_strength),
                 _ALT_MODE.get(altproc.alt_process, 0) if settings.process.process_mode == ProcessMode.BW else 0,
             )
+            + struct.pack("ffff", NEUTRAL_BLACK_HI if neutral_blacks_for(settings) else 0.0, NEUTRAL_BLACK_LO, 0.0, 0.0)
         )
 
         if vignette_full_crop is None:

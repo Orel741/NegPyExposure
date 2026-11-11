@@ -389,3 +389,27 @@ pub fn apply_vignette(
             }
         });
 }
+
+const LUMA_R: f32 = 0.2974;
+const LUMA_G: f32 = 0.6273;
+const LUMA_B: f32 = 0.0753;
+
+/// `neutral_black`: each pixel moves toward its own luma by `1 - smoothstep(lo, hi, luma)`, so the
+/// deepest tones converge on neutral black as paper's do. Luma holds; channels past the third pass.
+pub fn neutral_black(src: &[f32], cn: usize, lo: f32, hi: f32, dst: &mut [f32]) {
+    use rayon::prelude::*;
+    let span = (hi - lo).max(1e-12);
+    dst.par_chunks_mut(cn * 4096)
+        .zip(src.par_chunks(cn * 4096))
+        .for_each(move |(d, s)| {
+            for (dp, sp) in d.chunks_exact_mut(cn).zip(s.chunks_exact(cn)) {
+                let y = LUMA_R * sp[0] + LUMA_G * sp[1] + LUMA_B * sp[2];
+                let t = ((y - lo) / span).clamp(0.0, 1.0);
+                let w = 1.0 - t * t * (3.0 - 2.0 * t);
+                for c in 0..3 {
+                    dp[c] = sp[c] + w * (y - sp[c]);
+                }
+                dp[3..].copy_from_slice(&sp[3..]);
+            }
+        });
+}

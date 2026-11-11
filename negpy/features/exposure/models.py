@@ -241,9 +241,6 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # content beside its grays, so confidence rolls off past the dead zone over the scale.
     "neutral_axis_width_deadzone": 0.15,
     "neutral_axis_width_scale": 0.30,
-    # Width (percentile points) of the luma-extreme band the same-pixel color
-    # floor refs read; Color Clip sets the band's depth.
-    "color_bounds_band_width": 4.0,
     # Clamp on each channel's deviation from green at any anchor.
     "midtone_cast_max_offset": 0.2,
     # Curvature clamp (fraction of slope, <0.5): keeps the per-channel core

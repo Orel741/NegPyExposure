@@ -401,6 +401,19 @@ class TestLabLogic(unittest.TestCase):
         for y, x in specks:
             self.assertLess(abs(float(res_lab[y, x, 1] - lab[0, 0, 1])), 3.0)
 
+    def test_chroma_denoise_keeps_near_black_neutral(self) -> None:
+        """Near-black specks in a blue shadow take the shadow's hue, not its a*/b*, so they stay near black."""
+        rng = np.random.default_rng(0)
+        img = np.clip(np.float32(0.01) * np.array([0.8, 0.9, 1.4], np.float32) * (1 + 0.3 * rng.standard_normal((80, 80, 3))), 0, None)
+        img = img.astype(np.float32)
+        dark = rng.random((80, 80)) < 0.1
+        img[dark] = 2e-5
+
+        res = apply_chroma_denoise(img, radius=2.5)
+
+        self.assertLess(float(res[dark].max()), 1e-4)
+        self.assertLess(float(res[~dark].mean(axis=0)[2] / img[~dark].mean(axis=0)[2]), 1.05)
+
     def test_chroma_denoise_keeps_a_strong_color_edge(self) -> None:
         """Chroma above the cutoff survives where it belongs to a real color edge, so the edge does not soften."""
         lab = rgb_to_lab_working(np.full((40, 60, 3), 0.5, dtype=np.float32))
