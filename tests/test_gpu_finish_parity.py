@@ -10,6 +10,7 @@ from dataclasses import replace
 import numpy as np
 
 from negpy.domain.models import WorkspaceConfig
+from negpy.features.finish.processor import neutral_blacks_for
 from negpy.features.process.models import ProcessMode
 from negpy.infrastructure.gpu.device import GPUDevice
 
@@ -86,6 +87,13 @@ class TestGpuFinishParity(unittest.TestCase):
             finish=replace(settings.finish, carrier_width=3.0, carrier_rough=0.6),
             export=replace(settings.export, export_print_size=3.0),
         )
+        self._assert_parity(settings)
+
+    def test_neutral_blacks(self):
+        """A dark scan-stock print puts pixels in the band where blacks converge on neutral."""
+        settings = WorkspaceConfig()
+        settings = replace(settings, exposure=replace(settings.exposure, blacks=1.0, density=1.6))
+        self.assertTrue(neutral_blacks_for(settings))
         self._assert_parity(settings)
 
     def test_layout_mat_bottom_weight(self):

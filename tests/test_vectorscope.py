@@ -96,8 +96,8 @@ class TestVectorscopeParity(unittest.TestCase):
             self.skipTest("render fell back to the CPU engine")
         cpu_scope = vectorscope_histogram(cpu_out)
         self.assertEqual(cpu_scope.sum(), gpu_scope.sum())
-        a = cpu_scope / cpu_scope.sum()
-        b = gpu_scope / gpu_scope.sum()
+        # A neutral pixel has no hue, so float noise picks its hue bin: compare the centre ring summed.
+        a, b = (np.concatenate([s[:, 1:].ravel(), [s[:, 0].sum()]]) / s.sum() for s in (cpu_scope, gpu_scope))
         self.assertLess(float(np.abs(a - b).sum()), 0.01)
 
 

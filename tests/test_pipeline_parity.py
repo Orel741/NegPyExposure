@@ -635,7 +635,11 @@ class TestLabParity:
 
         rng = np.random.default_rng(11)
         img = np.ascontiguousarray(np.clip(self.img + rng.normal(0, 0.03, self.img.shape).astype(np.float32), 1e-4, 1.0))
-        s = replace(_make_base_settings(), lab=LabConfig(chroma_denoise=chroma_denoise, sharpen=0.0))
+        # Neutral blacks would take the chroma this test measures out of the darkest pixels.
+        base = _make_base_settings()
+        s = replace(
+            base, lab=LabConfig(chroma_denoise=chroma_denoise, sharpen=0.0), exposure=replace(base.exposure, paper_profile="neutral")
+        )
         h, w = img.shape[:2]
         ctx = PipelineContext(original_size=(h, w), scale_factor=scale, process_mode=s.process.process_mode)
         cpu = np.asarray(self.cpu.process(img, s, f"parity_cdn_{chroma_denoise}_{scale}", context=ctx))[..., :3]

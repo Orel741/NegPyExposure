@@ -59,6 +59,16 @@ def rebate_tone(settings: "WorkspaceConfig", metrics: Any) -> np.ndarray:
     return np.ascontiguousarray(printed / np.maximum(printed[:1], 1e-6), dtype=np.float32)
 
 
+def neutral_blacks_for(settings: "WorkspaceConfig") -> bool:
+    """A color negative on a scan stock: its blacks converge on neutral, as a minilab scan's do."""
+    from negpy.features.exposure.papers import effective_paper_profile
+
+    process = settings.process
+    if process.process_mode != ProcessMode.C41 or process.positive_source:
+        return False
+    return effective_paper_profile(settings.exposure.paper_profile, process.process_mode).scan
+
+
 class FinishProcessor:
     def __init__(
         self,

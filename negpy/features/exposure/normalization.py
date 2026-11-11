@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 # Bump in any change that alters the bounds a frame measures for unchanged settings. Saved
 # per-frame bounds from an older version are dropped at startup (migrations/bounds.py).
-BOUNDS_VERSION = 5
+BOUNDS_VERSION = 6
 
 # Contrast Mask blur sigma, per-cent of the analysis grid's short side. Of the grid, not of
 # the render, so preview and export mask alike. Near the Frontier HyperTone blur's spread.
@@ -682,45 +682,6 @@ def _sample_log_bounds(
     return floors, ceils
 
 
-def _same_pixel_color_floor_refs(
-    img_log: ImageBuffer,
-    luma_floors: list,
-    luma_ceils: list,
-    base_refs: Tuple[float, float, float],
-    color_clip: float,
-) -> Optional[Tuple[float, float, float]]:
-    """
-    Dense-end (print-white) color refs from one shared pixel set: the luma-extreme
-    band's lowest-chroma subset, chroma measured base-anchored (offsets from the
-    thin-end refs, per-channel span as provisional gamma, refined once from the
-    band medians). Independent per-channel percentiles read a different scene
-    object per channel, so colored highlight content masquerades as film cast;
-    a shared chroma-gated set cannot. The thin end needs no such treatment —
-    density on real film is bounded below by base, anchoring per-channel ceils.
-    None when the band's neutral set is too small or too chromatic (caller falls
-    back to the percentile pass).
-    """
-    from negpy.features.exposure.models import EXPOSURE_CONSTANTS
-
-    c = EXPOSURE_CONSTANTS
-    constants = (
-        float(c["neutral_axis_chroma_quantile"]),
-        float(c["neutral_axis_chroma_cap"]),
-        float(c["neutral_axis_first_pass_cap"]),
-        int(c["neutral_axis_min_pixels"]),
-        float(c["color_bounds_band_width"]),
-    )
-    refs = negpy_core.same_pixel_color_floor_refs(
-        np.ascontiguousarray(img_log, dtype=np.float32),
-        [float(v) for v in luma_floors],
-        [float(v) for v in luma_ceils],
-        [float(v) for v in base_refs],
-        float(color_clip),
-        constants,
-    )
-    return None if refs is None else (refs[0], refs[1], refs[2])
-
-
 def analyze_log_exposure_bounds(
     image: ImageBuffer,
     roi: Optional[tuple[int, int, int, int]] = None,
@@ -783,16 +744,14 @@ def analyze_log_exposure_bounds_from_log(
 
     floors, ceils = _sample_log_bounds(img_log, percentile_clip, base_luma, sorted_grid)
 
-    # Color pass: per-channel refs, widened to the luma window. The
-    # ceils (thin end, base-anchored) come from per-channel percentiles at color_clip. The
-    # floors (dense end, scene content) prefer the same-pixel chroma-gated band refs and fall
-    # back to the percentile pass when the band holds no trustworthy neutrals, and always for
-    # margin-mode clips.
+    # Color pass: per-channel refs, widened to the luma window. The ceils (thin end,
+    # base-anchored) come from per-channel percentiles at color_clip. The floors (dense end) are
+    # each channel's own robust extreme: a light burned past every layer's shoulder prints white.
+    # A dense ref at color_clip sits in the midtones of a dark frame, where its span is too short
+    # to set each channel's slope. Margin-mode clips keep the percentile pass at both ends.
     c_floors, c_ceils = _sample_log_bounds(img_log, color_clip, 0.0, sorted_grid)
     if color_clip >= 0:
-        sp = _same_pixel_color_floor_refs(img_log, floors, ceils, (c_ceils[0], c_ceils[1], c_ceils[2]), color_clip)
-        if sp is not None:
-            c_floors = [sp[0], sp[1], sp[2]]
+        c_floors = floors if percentile_clip == 0 else _sample_log_bounds(img_log, 0.0, base_luma, sorted_grid)[0]
     spans = [c_floors[ch] - c_ceils[ch] for ch in range(3)]
     total = sum(spans)
     if all(s * total > 0 for s in spans):

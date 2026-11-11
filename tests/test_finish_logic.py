@@ -290,3 +290,25 @@ class TestCarrier(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_neutral_black_converges_near_black_and_holds_luma():
+    from negpy.domain.types import LUMA_COEFFS
+    from negpy.features.finish.logic import NEUTRAL_BLACK_HI, NEUTRAL_BLACK_LO, neutral_black
+
+    img = np.array(
+        [
+            [
+                [0.2 * NEUTRAL_BLACK_LO, 0.5 * NEUTRAL_BLACK_LO, 3.0 * NEUTRAL_BLACK_LO],
+                [0.5, 0.3, 0.1],
+                [NEUTRAL_BLACK_HI * 0.4, NEUTRAL_BLACK_HI * 0.5, NEUTRAL_BLACK_HI * 0.9],
+            ]
+        ],
+        dtype=np.float32,
+    )
+    out = neutral_black(img)
+
+    np.testing.assert_allclose(out[0, 0], np.full(3, img[0, 0] @ LUMA_COEFFS), rtol=1e-5)
+    np.testing.assert_array_equal(out[0, 1], img[0, 1])
+    np.testing.assert_allclose(out @ LUMA_COEFFS, img @ LUMA_COEFFS, rtol=1e-5)
+    assert np.ptp(out[0, 2]) < np.ptp(img[0, 2])

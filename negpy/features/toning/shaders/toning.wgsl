@@ -14,6 +14,10 @@ struct ToningUniforms {
     copper_strength: f32,
     vanadium_strength: f32,
     alt_mode: u32,             // 0 none, 1 lith, 2 cyanotype
+    neutral_black_hi: f32,     // 0 = off; mirrors NEUTRAL_BLACK_* in features/finish/logic.py
+    neutral_black_lo: f32,
+    _pad0: f32,
+    _pad1: f32,
 };
 
 @group(0) @binding(0) var input_tex: texture_2d<f32>;
@@ -179,6 +183,15 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         }
 
         color = lab_to_rgb(lab);
+    }
+
+    // A scan stock's deepest tones converge on their own luma, as neutral_black() in
+    // negpy_core/src/finish.rs.
+    if (params.neutral_black_hi > 0.0) {
+        let y = 0.2974 * color.r + 0.6273 * color.g + 0.0753 * color.b;
+        let t = clamp((y - params.neutral_black_lo) / max(params.neutral_black_hi - params.neutral_black_lo, 1e-12), 0.0, 1.0);
+        let w = 1.0 - t * t * (3.0 - 2.0 * t);
+        color = color + w * (vec3<f32>(y) - color);
     }
 
     textureStore(output_tex, coords_out, vec4<f32>(clamp(color, vec3<f32>(0.0), vec3<f32>(1.0)), 1.0));

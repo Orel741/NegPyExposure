@@ -43,7 +43,8 @@ from negpy.features.altprocess.models import AltProcess
 from negpy.features.process.models import FADE_RENDER_FIELDS, ProcessMode
 from negpy.features.lab.logic import apply_clahe
 from negpy.features.lab.processor import PhotoLabProcessor
-from negpy.features.finish.processor import FinishProcessor, rebate_tone
+from negpy.features.finish.logic import neutral_black
+from negpy.features.finish.processor import FinishProcessor, neutral_blacks_for, rebate_tone
 from negpy.kernel.system.config import APP_CONFIG, render_scale_factor
 from negpy.services.view.coordinate_mapping import CoordinateMapping
 from negpy.kernel.system import timing
@@ -393,6 +394,8 @@ class DarkroomEngine:
             timing.lap("lab")
 
             current_img = print_stages(settings, current_img, context)
+            if neutral_blacks_for(settings):
+                current_img = neutral_black(current_img)
             timing.lap("alt process/toning")
 
         if not context.crop_preview_full:

@@ -82,7 +82,38 @@ fn apply_vignette<'py>(
     Ok(out)
 }
 
+/// `neutral_black(img, lo, hi)` of a contiguous HxWxC float32 image, C >= 3.
+#[pyfunction]
+fn neutral_black<'py>(
+    py: Python<'py>,
+    img: PyReadonlyArrayDyn<'py, f32>,
+    lo: f32,
+    hi: f32,
+) -> PyResult<Bound<'py, PyArrayDyn<f32>>> {
+    let [_, _, cn] = img.shape()[..] else {
+        return Err(PyValueError::new_err("needs an HxWxC image"));
+    };
+    if cn < 3 {
+        return Err(PyValueError::new_err("needs at least three channels"));
+    }
+    let src = img
+        .as_slice()
+        .map_err(|_| PyValueError::new_err("needs a contiguous image"))?;
+    let out = PyArrayDyn::<f32>::zeros(py, img.shape(), false);
+    {
+        let mut rw = out.readwrite();
+        let dst = rw
+            .as_slice_mut()
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        super::detach(py, dst.len(), || {
+            finish::neutral_black(src, cn, lo, hi, dst)
+        });
+    }
+    Ok(out)
+}
+
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(neutral_black, m)?)?;
     m.add_function(wrap_pyfunction!(apply_vignette, m)?)?;
     m.add_function(wrap_pyfunction!(apply_carrier, m)?)
 }
