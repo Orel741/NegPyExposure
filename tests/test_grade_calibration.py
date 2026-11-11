@@ -102,8 +102,9 @@ class TestDensityRangeMetric(unittest.TestCase):
 
 class TestCalibratedGradeOutput(unittest.TestCase):
     def setUp(self):
-        # Physical (range-coupled) mode: auto contrast/exposure off.
-        self.config = WorkspaceConfig(exposure=ExposureConfig(auto_normalize_contrast=False, auto_exposure=False))
+        # Physical (range-coupled) mode: auto contrast/exposure off on a paper; a scan profile places fixed levels.
+        exposure = ExposureConfig(auto_normalize_contrast=False, auto_exposure=False, paper_profile="neutral")
+        self.config = WorkspaceConfig(exposure=exposure)
 
     def _run(self, density_range):
         ctx = PipelineContext(scale_factor=1.0, original_size=(100, 100), process_mode=ProcessMode.C41)

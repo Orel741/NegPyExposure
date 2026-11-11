@@ -54,27 +54,34 @@ def _auto_slope(exposure: ExposureConfig, process_mode: Optional[str], metrics: 
 
 
 def _scan_levels(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Optional[Tuple[float, float]]:
-    """Green's (slope, pivot) under a scan profile's levels, None where they do not act."""
+    """Green's (slope, pivot) under a scan profile with both Autos on, None otherwise. Placed at
+    the metered points, or unplaced while the shadow or highlight meter is missing."""
     profile, _ = _paper(exposure, process_mode)
     if not profile.scan or not exposure.auto_exposure or not exposure.auto_normalize_contrast:
         return None
-    if any(metrics.get(k) is None for k in ("metered_anchor", "shadow_point", "highlight_point", "norm_density_range")):
+    if any(metrics.get(k) is None for k in ("metered_anchor", "textural_range", "norm_density_range")):
         return None
     slopes, pivots, _ = curve_params_from_metrics(exposure, process_mode, metrics)
     return slopes[1], pivots[1]
 
 
 def _scan_shown(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Optional[Dict[str, float]]:
-    """The Density and Grade that print a scan profile's levels with both Autos off."""
+    """The Density and Grade that print a scan profile's levels with both Autos off. With both
+    off, the levels hold fixed points, so the placed slope scales with the manual slope and
+    Density moves the placed pivot by density_multiplier per unit."""
     placed = _scan_levels(exposure, process_mode, metrics)
     if placed is None:
         return None
     slope, pivot = placed
-    profile, d_min = _paper(exposure, process_mode)
-    mg = effective_midtone_gamma(profile, exposure.midtone_gamma)
+    profile, _ = _paper(exposure, process_mode)
+    lum_range = metrics["norm_density_range"]
+    gain = slope_gain(profile)
+    off = replace(exposure, auto_exposure=False, auto_normalize_contrast=False, grade=NEUTRAL["grade"], density=NEUTRAL["density"])
+    neutral_slope = curve_params_from_metrics(off, process_mode, metrics)[0][1]
+    grade = slope_to_grade(grade_to_slope(NEUTRAL["grade"], lum_range, gain) * slope / neutral_slope, lum_range, gain)
+    graded_pivot = curve_params_from_metrics(replace(off, grade=grade), process_mode, metrics)[1][1]
     mult = float(effective_constants(profile)["density_multiplier"])
-    density = 1.0 - (pivot - compute_pivot(slope, 1.0, d_min, paper=profile, midtone_gamma=mg)) / mult
-    return {"density": density, "grade": slope_to_grade(slope, metrics["norm_density_range"], slope_gain(profile))}
+    return {"density": NEUTRAL["density"] - (pivot - graded_pivot) / mult, "grade": grade}
 
 
 def print_shown_values(exposure: ExposureConfig, process_mode: Optional[str], metrics: Mapping[str, Any]) -> Dict[str, float]:

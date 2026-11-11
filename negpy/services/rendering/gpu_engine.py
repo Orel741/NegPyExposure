@@ -2175,6 +2175,7 @@ class GPUEngine:
             levels=(exp.whites, exp.blacks),
             tone_profile=exp.tone_profile,
             exposure_ev=exp.exposure_ev,
+            auto_exposure=exp.auto_exposure,
         )
         hl_auto = (
             highlight_hold_offset(

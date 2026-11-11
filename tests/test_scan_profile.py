@@ -67,6 +67,23 @@ def test_the_levels_need_both_autos_and_both_points(over):
     assert per_channel_curve_params(115.0, 1.0, **kw, **points) == _paper_curve_params(115.0, 1.0, **kw)
 
 
+@pytest.mark.parametrize("shadow_point, highlight_point", [(0.93, 0.04), (None, None)])
+def test_both_autos_off_place_the_fixed_points(shadow_point, highlight_point):
+    off = dict(auto_normalize_contrast=False, auto_exposure=False, anchor=None, shadow_point=shadow_point)
+    slopes, pivots, _ = _params(SCAN, highlight_point=highlight_point, **off)
+    c = effective_constants(SCAN)
+    d_max = float(c["d_max"])
+    line = lambda u: slopes[1] * (u - pivots[1])  # noqa: E731
+    assert line(c["scan_fixed_shadow_point"]) == pytest.approx(d_max * (1.0 - c["scan_black_level"]))
+    assert line(c["scan_fixed_highlight_point"]) == pytest.approx(d_max * (1.0 - c["scan_white_level"]))
+
+
+def test_one_auto_on_leaves_the_levels_off():
+    kw = dict(_ARGS, paper=SCAN, shadow_point=0.93, anchor=None)
+    placed = per_channel_curve_params(115.0, 1.0, **kw, highlight_point=0.04, auto_exposure=False)
+    assert placed == _paper_curve_params(115.0, 1.0, **kw)
+
+
 def test_a_frame_with_no_range_keeps_the_paper_placement():
     params = ((3.0, 3.0, 3.0), (0.5, 0.5, 0.5), (0.0, 0.0, 0.0))
     assert scan_levels(params, 3.0, 0.5, 0.5, 0.5, EXPOSURE_CONSTANTS) == params

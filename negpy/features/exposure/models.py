@@ -316,6 +316,10 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # into noise, and a frame with a large bright area is not printed dark under it.
     "scan_levels_span_min": 0.5,
     "scan_levels_span_max": 0.7,
+    # The shadow and highlight points a scan profile's levels use with both Autos off, as
+    # normalized luma: the typical metered shadow tail and a span between the bounds above.
+    "scan_fixed_shadow_point": 0.98,
+    "scan_fixed_highlight_point": 0.38,
     # The code, as a fraction of the range, that a scan profile's Grade turns about.
     "scan_contrast_pivot": 0.45,
     # Whites and Blacks at full travel move their end by this fraction of the code range.
