@@ -2136,6 +2136,7 @@ class GPUEngine:
             compose_density_matrices,
             effective_constants,
             effective_paper_profile,
+            render_shoulder_sharpness,
             resolve_print_color,
             resolve_saturation_matrix,
             scan_gamma,
@@ -2318,7 +2319,7 @@ class GPUEngine:
                 exp.shadow_density + sh_auto,
                 pc["d_max"],
                 pc["toe_sharpness_base"],
-                pc["shoulder_sharpness_base"],
+                render_shoulder_sharpness(pc),
                 # Separation Damping (toeshoulder_width_ref is a WGSL literal).
                 sep_damping,
                 pc["toe_height"],

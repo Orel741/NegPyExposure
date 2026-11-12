@@ -9,6 +9,7 @@ from negpy.features.exposure.papers import (
     PaperProfile,
     compose_density_matrices,
     effective_constants,
+    render_shoulder_sharpness,
     resolve_print_color,
     resolve_saturation_matrix,
     scan_gamma,
@@ -128,7 +129,7 @@ class CharacteristicCurve:
         self.bpc_black = 10.0**-db
         wr = float(c["toeshoulder_width_ref"])
         # toe = the shadow (upper) bound, shoulder = the highlight (lower) bound.
-        self.a_hl = float(c["shoulder_sharpness_base"]) * wr / max(shoulder_width, 1e-6)
+        self.a_hl = render_shoulder_sharpness(c) * wr / max(shoulder_width, 1e-6)
         a_sh_base = float(c["toe_sharpness_base"]) * wr / max(toe_width, 1e-6)
         self.d_min_eff = max(0.0, self.d_min + shoulder * ts * float(c["shoulder_height"]))
         toe_eff = toe * ts
@@ -487,7 +488,7 @@ def apply_characteristic_curve(
         d_min_rgb=np.array(d_min_rgb, dtype=np.float64),
         d_max=float(c["d_max"]),
         a_toe_base=float(c["toe_sharpness_base"]),
-        a_sh_base=float(c["shoulder_sharpness_base"]),
+        a_sh_base=render_shoulder_sharpness(c),
         width_ref=float(c["toeshoulder_width_ref"]),
         toe_height=float(c["toe_height"]),
         sh_height=float(c["shoulder_height"]),
