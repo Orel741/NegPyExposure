@@ -1009,12 +1009,24 @@ def resolve_bounds_detailed(process, analyze_fn) -> tuple[LogNegativeBounds, Log
     roll_color = process.use_color_average and process.is_locked_initialized
     locked = LogNegativeBounds(process.locked_floors, process.locked_ceils)
     if roll_luma and roll_color:
-        return locked, locked
+        return with_picked_dmin(process, locked), locked
     base = LogNegativeBounds(process.local_floors, process.local_ceils) if process.is_local_initialized else analyze_fn()
     if process.manual_dmin is not None or process.manual_dmax is not None:
         base = LogNegativeBounds(process.manual_dmax or base.floors, process.manual_dmin or base.ceils)
     final = mix_luma_color_bounds(locked if roll_luma else base, locked if roll_color else base)
-    return final, base
+    return with_picked_dmin(process, final), base
+
+
+def picked_dmin(process) -> Optional[Tuple[float, float, float]]:
+    """The thin end picked by hand: the frame's own Dmin, else its roll's."""
+    return process.manual_dmin or getattr(process, "roll_dmin", None)
+
+
+def with_picked_dmin(process, bounds: LogNegativeBounds) -> LogNegativeBounds:
+    """*bounds* with the picked Dmin as the thin end. It wins over a roll average, so the
+    persisted per-frame base never holds a roll's Dmin."""
+    dmin = picked_dmin(process)
+    return bounds if dmin is None else LogNegativeBounds(bounds.floors, tuple(dmin))
 
 
 def luma_source_bounds(process, base: LogNegativeBounds) -> LogNegativeBounds:
@@ -1026,5 +1038,5 @@ def luma_source_bounds(process, base: LogNegativeBounds) -> LogNegativeBounds:
     color-average toggle (mix_luma_color_bounds already pins centre+range).
     """
     if process.use_luma_average and process.is_locked_initialized:
-        return LogNegativeBounds(process.locked_floors, process.locked_ceils)
-    return base
+        return with_picked_dmin(process, LogNegativeBounds(process.locked_floors, process.locked_ceils))
+    return with_picked_dmin(process, base)

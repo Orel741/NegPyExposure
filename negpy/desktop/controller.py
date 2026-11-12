@@ -3852,9 +3852,30 @@ class AppController(QObject):
             return
         logs = np.asarray([log_from_val(tuple(px), bounds) for px in patch], dtype=np.float64)
         picked = tuple(float(v) for v in np.median(logs, axis=0))
-        self._set_bounds_picks(**{field: picked, f"{field}_at": (float(nx), float(ny))})
-        self.set_status(tr("Dmin set for this frame") if field == "manual_dmin" else tr("Dmax set for this frame"), 3000)
+        roll_id = self.state.active_roll_id
+        frame_only = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
+        if field == "manual_dmin" and roll_id and not frame_only and rolls.set_roll_dmin(self.session.repo, roll_id, picked):
+            # The roll's Dmin serves this frame too, so the frame's own pick steps aside.
+            self._set_roll_dmin(picked)
+            self.set_status(tr("Dmin set for the roll"), 3000)
+        else:
+            self._set_bounds_picks(**{field: picked, f"{field}_at": (float(nx), float(ny))})
+            self.set_status(tr("Dmin set for this frame") if field == "manual_dmin" else tr("Dmax set for this frame"), 3000)
         self.set_active_tool(ToolMode.NONE)
+
+    def _set_roll_dmin(self, dmin: Optional[tuple]) -> None:
+        """Show the open roll's new Dmin on the active frame and re-render every other frame's thumbnail."""
+        conf = self.state.config
+        proc = replace(conf.process, roll_dmin=dmin)
+        if dmin is not None and conf.process.manual_dmin is not None:
+            proc = replace(proc, manual_dmin=None, manual_dmin_at=None, local_floors=(0.0, 0.0, 0.0), local_ceils=(0.0, 0.0, 0.0))
+        self.apply_config(replace(conf, process=proc), persist=True)
+        current = self.state.current_file_hash
+        self.refresh_thumbnails_for([f["hash"] for f in self.state.uploaded_files if f.get("hash") and f["hash"] != current])
+
+    def roll_dmin(self) -> Optional[tuple]:
+        """The open roll's picked Dmin, or None."""
+        return rolls.roll_dmin(self.session.repo, self.state.active_roll_id)
 
     def _set_bounds_picks(self, **picks: Optional[tuple]) -> None:
         # The persisted base holds the picks once rendered, so it is measured again even under Lock Bounds.
@@ -3867,9 +3888,14 @@ class AppController(QObject):
         return proc.manual_dmin is not None or proc.manual_dmax is not None
 
     def clear_bounds_pick(self, field: str) -> None:
-        if getattr(self.state.config.process, field) is None:
+        """Clear the frame's own pick, else, for Dmin, the open roll's."""
+        if getattr(self.state.config.process, field) is not None:
+            self._set_bounds_picks(**{field: None, f"{field}_at": None})
+        elif field == "manual_dmin" and self.roll_dmin() is not None:
+            rolls.set_roll_dmin(self.session.repo, self.state.active_roll_id, None)
+            self._set_roll_dmin(None)
+        else:
             return
-        self._set_bounds_picks(**{field: None, f"{field}_at": None})
         self.tool_sync_requested.emit()
 
     def film_base_for(self, asset: dict, process: Any) -> Optional[tuple]:

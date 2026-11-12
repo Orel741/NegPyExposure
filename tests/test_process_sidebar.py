@@ -453,17 +453,26 @@ def test_average_toggles_gray_out_without_a_roll(qapp):
     assert sidebar.use_luma_avg_btn.isEnabled() and sidebar.use_color_avg_btn.isEnabled()
 
 
-def test_hand_picks_gray_out_while_the_frame_prints_on_the_roll_average(qapp):
-    """The render ignores Dmin/Dmax when Luma and Color both ride, so the picks say so."""
+def test_dmax_grays_out_while_the_frame_prints_on_the_roll_average(qapp):
+    """The render ignores Dmax when Luma and Color both ride, so the pick says so; Dmin wins over them."""
     controller, sidebar = _sidebar()
+    controller.roll_dmin.return_value = None
     cfg = controller.state.config
     controller.state.config = replace(cfg, process=replace(cfg.process, use_luma_average=True, use_color_average=True))
     sidebar.sync_ui()
 
-    assert not sidebar.dmin_btn.isEnabled() and not sidebar.dmax_btn.isEnabled()
-    assert "roll average" in sidebar.dmin_hint.text()
+    assert sidebar.dmin_btn.isEnabled() and not sidebar.dmax_btn.isEnabled()
+    assert "roll average" in sidebar.dmax_hint.text()
 
     controller.state.config = replace(cfg, process=replace(cfg.process, use_luma_average=True, use_color_average=False))
     sidebar.sync_ui()
 
     assert sidebar.dmin_btn.isEnabled() and sidebar.dmax_btn.isEnabled()
+
+
+def test_the_dmin_hint_names_the_rolls_pick(qapp):
+    controller, sidebar = _sidebar()
+    controller.roll_dmin.return_value = (-0.1, -0.2, -0.6)
+    sidebar.sync_ui()
+    assert "Roll" in sidebar.dmin_hint.text()
+    assert sidebar.dmin_btn.clear_btn.isVisibleTo(sidebar.dmin_btn)
