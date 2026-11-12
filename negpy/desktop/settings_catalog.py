@@ -95,6 +95,10 @@ def _fmt_source_encoding(values: tuple) -> str:
     return tr(SOURCE_ENCODING_LABELS[SourceEncoding(values[0])])
 
 
+def _fmt_leak_frame(values: tuple) -> str:
+    return tr("Placed") if values[0] else "—"
+
+
 def _fmt_print_stock(values: tuple) -> str:
     profile = PAPER_PROFILES.get(values[0])
     return profile.label if profile else str(values[0])
@@ -328,6 +332,11 @@ CATALOG: list[tuple[str, tuple[SettingRow, ...]]] = [
         _row(mark("IR Removal"), "retouch", "ir_dust_remove"),
         _row(mark("IR Threshold"), "retouch", "ir_threshold"),
         _row(mark("IR Attenuation"), "retouch", "ir_attenuation"),
+    )),
+    (mark("Light Leak"), (
+        _row(mark("Light Leak"), "leak", "leak_apply"),
+        _row(mark("Measuring Frame"), "leak", "leak_frame", "leak_anchor", fmt=_fmt_leak_frame),
+        _row(mark("Strength"), "leak", "leak_strength"),
     )),
     (mark("Metadata"), (
         _row(mark("Analog Gear"), "metadata", *GEAR_FIELDS, fmt=_fmt_gear),
@@ -627,6 +636,7 @@ FRAME_CARD_FIELDS: dict[str, tuple | None] = {
     "toning": None,
     "retouch": None,
     "finish": None,
+    "leak": None,
 }
 
 

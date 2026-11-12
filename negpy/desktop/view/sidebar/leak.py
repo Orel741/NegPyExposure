@@ -36,7 +36,7 @@ class LeakSidebar(BaseSidebar):
         self.strength_slider.setToolTip(tr("How much of the measured leak comes out of the frame."))
         self.layout.addWidget(self.strength_slider)
 
-        self.hint = hint_label(tr("Click Measure Leak, then put the points on film with no picture."))
+        self.hint = hint_label(tr("Click Measure Leak, put the points on film with no picture, then turn on the bulb."))
         self.layout.addWidget(self.hint)
 
     def _connect_signals(self) -> None:
@@ -52,7 +52,7 @@ class LeakSidebar(BaseSidebar):
 
     def sync_ui(self) -> None:
         conf = self.state.config.leak
-        has_frame = bool(conf.leak_points)
+        has_frame = bool(conf.leak_frame)
         for w in (self.frame_btn, self.enable_btn, self.strength_slider):
             w.blockSignals(True)
         try:
@@ -62,7 +62,7 @@ class LeakSidebar(BaseSidebar):
             self.enable_btn.setEnabled(has_frame)
             self.strength_slider.setValue(conf.leak_strength)
             self.strength_slider.setEnabled(has_frame)
-            self.hint.setVisible(not has_frame)
+            self.hint.setVisible(not (has_frame and conf.leak_apply))
         finally:
             for w in (self.frame_btn, self.enable_btn, self.strength_slider):
                 w.blockSignals(False)

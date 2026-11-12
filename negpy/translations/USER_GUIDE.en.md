@@ -433,8 +433,10 @@ How the print is presented. The other sliders of each effect show once its first
 Removes a light leak: a red, orange or magenta glow that light through a camera or a cassette puts on the film. NegPy measures the leak on the clear film around the picture, where no picture hides it, and takes it out of the whole frame.
 
 *   **Measure Leak**: shows the whole scan with a frame of points. Drag the points onto clear film: the strip between the perforations and the picture, and the gap between two frames. A corner moves the points of its two sides with it. Keep each point off the perforations and the edge print. The × removes the frame and the correction.
-*   **Apply Light Leak** (the bulb): turns the correction on and off.
+*   **Apply Light Leak** (the bulb): turns the correction on and off. It starts off, and moving the points does not change it. Place the points on the plain scan, then turn it on.
 *   **Strength**: how much of the measured leak comes out. 1 takes out what was measured.
+
+The measuring frame follows the crop. Crop the photo first, then place the points. To use it on a whole roll, click **Apply to Frames** in the card header: each photo puts the measuring frame around its own crop and measures its own leak. Adjust the points on a photo where they miss the clear film.
 
 The leak is taken out as added light, so the shadows lose their glow and the highlights stay as they are. A leak that does not reach the edge of the frame cannot be measured.
 

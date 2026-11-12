@@ -370,7 +370,7 @@ def precorrect_key(
         source_orientation,
         metadata_lens_corrections(settings),
         flatfield_token(settings.flatfield),
-        leak_token(settings.leak),
+        leak_token(settings),
         sensor_token(settings.process),
         rgbscan_token(settings.rgbscan),
         stitch_token(settings.stitch),
@@ -383,7 +383,7 @@ def precorrect_source(img: ImageBuffer, settings: WorkspaceConfig, gain_slices: 
     img = flatfield_source(img, settings, gain_slices, orientation=source_orientation)
     if preview_takes_unmix(settings):
         img = apply_sensor_correction(img, effective_sensor_matrix(settings.process), settings.process.sensor_unmix)
-    return apply_leak(img, settings.leak)
+    return apply_leak(img, settings)
 
 
 def read_source_base(img: ImageBuffer, settings: WorkspaceConfig, source_hash: str, source_orientation: int = 1) -> Optional[tuple]:
@@ -398,10 +398,8 @@ def _unmix_source(f32_buffer: np.ndarray, params: WorkspaceConfig) -> np.ndarray
     one half, as the preview corrects a half alone. Triplets are never unmixed; a stitch holding one
     unmixes its other parts alone."""
     if (is_rgb_triplet(params.rgbscan) and not hdr_active(params.hdr)) or stitch_has_triplets(params.stitch):
-        return apply_leak(f32_buffer, params.leak)
-    return apply_leak(
-        apply_sensor_correction(f32_buffer, effective_sensor_matrix(params.process), params.process.sensor_unmix), params.leak
-    )
+        return apply_leak(f32_buffer, params)
+    return apply_leak(apply_sensor_correction(f32_buffer, effective_sensor_matrix(params.process), params.process.sensor_unmix), params)
 
 
 def _part_params(params: WorkspaceConfig, index: int) -> WorkspaceConfig:
@@ -830,7 +828,7 @@ class ImageProcessor:
         base_hash = (
             source_hash
             + flatfield_token(settings.flatfield)
-            + leak_token(settings.leak)
+            + leak_token(settings)
             + lens_decode_token(metadata_lens_corrections(settings), settings.flatfield)
             + rgbscan_token(settings.rgbscan)
             + stitch_token(settings.stitch)
@@ -1131,7 +1129,7 @@ class ImageProcessor:
             stitch_token(params.stitch),
             hdr_token(params.hdr),
             flatfield_token(params.flatfield),
-            leak_token(params.leak),
+            leak_token(params),
             sensor_token(params.process),
             demosaic_token(params.process.demosaic_export),
             fast_decode,
@@ -1161,11 +1159,11 @@ class ImageProcessor:
             if whole and unmix:
                 f32_buffer = _unmix_source(f32_buffer, params)
             elif unmix:
-                f32_buffer = apply_leak(f32_buffer, params.leak)
+                f32_buffer = apply_leak(f32_buffer, params)
             result = (f32_buffer, ir_full, source_cs)
         else:
             f32_buffer, ir_full, source_cs = self._decode_oriented_f32(file_path, params, fast_decode, unmix=unmix)
-            result = (apply_leak(f32_buffer, params.leak) if unmix else f32_buffer, ir_full, source_cs)
+            result = (apply_leak(f32_buffer, params) if unmix else f32_buffer, ir_full, source_cs)
 
         self._source_cache_key = cache_key
         self._source_cache_value = result
@@ -1415,7 +1413,7 @@ class ImageProcessor:
         detect_key = (
             source_hash
             + flatfield_token(params.flatfield)
-            + leak_token(params.leak)
+            + leak_token(params)
             + lens_decode_token(metadata_lens_corrections(params), params.flatfield)
             + rgbscan_token(params.rgbscan)
             + stitch_token(params.stitch)
@@ -2043,7 +2041,7 @@ class ImageProcessor:
             detect_key = (
                 source_hash
                 + flatfield_token(params.flatfield)
-                + leak_token(params.leak)
+                + leak_token(params)
                 + lens_decode_token(metadata_lens_corrections(params), params.flatfield)
                 + rgbscan_token(params.rgbscan)
                 + stitch_token(params.stitch)

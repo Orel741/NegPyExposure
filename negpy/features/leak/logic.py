@@ -3,15 +3,17 @@
 A leak adds light to the film. The clear film around the picture holds no image, so its density
 above the clear base is the leak alone. Each side of the measuring frame is read as a profile, the
 four profiles fill the frame as a Coons patch, and the leak comes out as exposure (`negpy_core.leak_correct`).
+The frame is stored in the crop's space and mapped back through the geometry onto the source.
 """
 
 import hashlib
-from typing import List, Optional, Sequence, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 import negpy_core
 import numpy as np
 
 from negpy.domain.types import ImageBuffer
+from negpy.features.geometry.logic import map_coords_to_geometry
 from negpy.features.leak.models import LEAK_SIDE_POINTS, LeakConfig
 
 # Film contrast that turns a density step into exposure: a color negative's slope.
@@ -27,20 +29,87 @@ _MEAN_SPAN = 5
 # The leak map is smooth, so it is solved on a small grid and resized to the image.
 _MAP_LONG_SIDE = 128
 _MIN_T = 1e-6
+_INVERSE_STEPS = 12
 
 Point = Tuple[float, float]
 
 
 def leak_active(config: LeakConfig) -> bool:
-    return bool(config.leak_apply) and len(config.leak_points) >= 4 and len(config.leak_points) % 4 == 0 and config.leak_strength > 0.0
+    return bool(config.leak_apply) and len(config.leak_frame) >= 4 and len(config.leak_frame) % 4 == 0 and config.leak_strength > 0.0
 
 
-def leak_token(config: LeakConfig) -> str:
-    """Identity of the active correction, folded into the render source hash. Empty when inactive."""
-    if not leak_active(config):
+def _geometry_key(geometry: Any) -> tuple:
+    return (
+        geometry.crop_rect,
+        int(geometry.rotation),
+        float(geometry.fine_rotation),
+        bool(geometry.flip_horizontal),
+        bool(geometry.flip_vertical),
+        float(geometry.distortion_k1),
+        float(geometry.converge_v),
+        float(geometry.converge_h),
+    )
+
+
+def leak_token(settings: Any) -> str:
+    """Identity of the active correction on a WorkspaceConfig, folded into the render source hash.
+    The geometry is in it, because the frame maps through the crop and the straightening. Empty when inactive."""
+    leak = settings.leak
+    if not leak_active(leak):
         return ""
-    raw = repr((config.leak_points, round(config.leak_strength, 6))).encode()
+    raw = repr((leak.leak_frame, leak.leak_anchor, round(leak.leak_strength, 6), _geometry_key(settings.geometry))).encode()
     return "|leak:" + hashlib.blake2b(raw, digest_size=8).hexdigest()
+
+
+def anchored_frame(config: LeakConfig, crop_rect: Optional[Sequence[float]]) -> Tuple[Point, ...]:
+    """The frame in the crop's space for a frame with *crop_rect*: moved and scaled from the rect it
+    was placed against onto this crop. Without an anchor or a crop, the frame stays where it was placed."""
+    if not config.leak_anchor or not crop_rect:
+        return config.leak_frame
+    ax1, ay1, ax2, ay2 = config.leak_anchor
+    cx1, cy1, cx2, cy2 = crop_rect
+    sx = (cx2 - cx1) / max(ax2 - ax1, 1e-9)
+    sy = (cy2 - cy1) / max(ay2 - ay1, 1e-9)
+    return tuple((cx1 + (x - ax1) * sx, cy1 + (y - ay1) * sy) for x, y in config.leak_frame)
+
+
+def source_points(points: Sequence[Point], geometry: Any, shape: Tuple[int, int]) -> Tuple[Point, ...]:
+    """*points* in the crop's space mapped back onto the source, normalized: the inverse of the
+    geometry stage, solved by Newton steps on `map_coords_to_geometry`."""
+
+    def forward(x: float, y: float) -> np.ndarray:
+        return np.asarray(
+            map_coords_to_geometry(
+                x,
+                y,
+                shape,
+                geometry.rotation,
+                geometry.fine_rotation,
+                geometry.flip_horizontal,
+                geometry.flip_vertical,
+                distortion_k1=geometry.distortion_k1,
+                converge_v=geometry.converge_v,
+                converge_h=geometry.converge_h,
+            )
+        )
+
+    eps = 1e-4
+    out: List[Point] = []
+    for tx, ty in points:
+        target = np.array([tx, ty])
+        p = np.array([0.5, 0.5])
+        for _ in range(_INVERSE_STEPS):
+            f = forward(*p)
+            err = target - f
+            if np.max(np.abs(err)) < 1e-7:
+                break
+            jac = np.stack([(forward(p[0] + eps, p[1]) - f) / eps, (forward(p[0], p[1] + eps) - f) / eps], axis=1)
+            try:
+                p = p + np.linalg.solve(jac, err)
+            except np.linalg.LinAlgError:
+                break
+        out.append((float(np.clip(p[0], 0.0, 1.0)), float(np.clip(p[1], 0.0, 1.0))))
+    return tuple(out)
 
 
 def default_points(rect: Tuple[float, float, float, float], per_side: int = LEAK_SIDE_POINTS) -> Tuple[Point, ...]:
@@ -134,23 +203,24 @@ def _inverse_bilinear(x: np.ndarray, y: np.ndarray, quad: np.ndarray) -> Tuple[n
     return u, v
 
 
-def measure(img: np.ndarray, config: LeakConfig) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    """(base transmittance per channel, leak map on a small grid, side densities) or None."""
-    if not leak_active(config):
+def measure(img: np.ndarray, points: Sequence[Point], strength: float) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """(base transmittance per channel, leak map on a small grid, side densities) for the frame
+    *points* in source-normalized coords, or None for a frame that is not a loop."""
+    if len(points) < 4 or len(points) % 4 or strength <= 0.0:
         return None
-    top, bottom, left, right = sides(config.leak_points)
+    top, bottom, left, right = sides(points)
     profiles = [side_densities(img, poly) for poly in (top, bottom, left, right)]
     # A leak only adds density, so the thinnest reading of each channel is the clear base.
     d_ref = np.min(np.concatenate([d for d, _ in profiles]), axis=0)
-    leaks = [(np.power(10.0, (d - d_ref) / LEAK_GAMMA) - 1.0) * config.leak_strength for d, _ in profiles]
+    leaks = [(np.power(10.0, (d - d_ref) / LEAK_GAMMA) - 1.0) * strength for d, _ in profiles]
     (lt, st), (lb, sb), (ll, sl), (lr, sr) = [(lk, s) for lk, (_, s) in zip(leaks, profiles)]
 
     h, w = img.shape[:2]
     scale = _MAP_LONG_SIDE / max(h, w)
     gw, gh = max(2, int(round(w * scale))), max(2, int(round(h * scale)))
     gx, gy = np.meshgrid((np.arange(gw) + 0.5) / gw, (np.arange(gh) + 0.5) / gh)
-    tl, tr, br, bl = corner_indices(len(config.leak_points))
-    quad = np.asarray([config.leak_points[i] for i in (tl, tr, br, bl)], dtype=np.float64)
+    tl, tr, br, bl = corner_indices(len(points))
+    quad = np.asarray([points[i] for i in (tl, tr, br, bl)], dtype=np.float64)
     u, v = _inverse_bilinear(gx, gy, quad)
 
     def along(s: np.ndarray, values: np.ndarray, t: np.ndarray) -> np.ndarray:
@@ -171,9 +241,13 @@ def measure(img: np.ndarray, config: LeakConfig) -> Optional[Tuple[np.ndarray, n
     return t_ref, np.maximum(patch, 0.0).astype(np.float32), np.stack([d for d, _ in profiles])
 
 
-def apply_leak(image: ImageBuffer, config: LeakConfig) -> ImageBuffer:
-    """Take the measured leak out of the linear source. No-op when inactive."""
-    found = measure(image, config)
+def apply_leak(image: ImageBuffer, settings: Any) -> ImageBuffer:
+    """Take the measured leak out of the linear source, for a WorkspaceConfig. No-op when inactive."""
+    leak = settings.leak
+    if not leak_active(leak):
+        return image
+    frame = anchored_frame(leak, settings.geometry.crop_rect)
+    found = measure(image, source_points(frame, settings.geometry, image.shape[:2]), leak.leak_strength)
     if found is None:
         return image
     t_ref, grid, _ = found
