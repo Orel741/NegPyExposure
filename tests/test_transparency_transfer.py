@@ -769,16 +769,11 @@ class TestAutoMeterForMode(unittest.TestCase):
     """auto_meter_for_mode: the rewrite with_process_mode applies to Auto Density/Auto
     Grade on a Film Mode switch."""
 
-    def test_untouched_negative_default_turns_off_entering_slide(self):
-        self.assertFalse(auto_meter_for_mode(ProcessMode.E6, current=True))
-
-    def test_already_off_stays_off_entering_slide(self):
-        self.assertFalse(auto_meter_for_mode(ProcessMode.E6, current=False))
-
-    def test_untouched_slide_default_turns_on_leaving_slide(self):
-        for mode in (ProcessMode.C41, ProcessMode.BW):
-            with self.subTest(mode=mode):
-                self.assertTrue(auto_meter_for_mode(mode, current=False))
+    def test_both_modes_start_off_so_a_switch_keeps_the_toggle(self):
+        for mode in (ProcessMode.E6, ProcessMode.C41, ProcessMode.BW):
+            for current in (True, False):
+                with self.subTest(mode=mode, current=current):
+                    self.assertIs(auto_meter_for_mode(mode, current=current), current)
 
     def test_already_on_stays_on_leaving_slide(self):
         self.assertTrue(auto_meter_for_mode(ProcessMode.C41, current=True))

@@ -57,14 +57,14 @@ class TestAutoNormalizeContrast(unittest.TestCase):
         self.assertFalse(np.allclose(contrasty, normal))
 
     def test_no_textural_falls_back_to_fixed_reference(self):
-        exp = ExposureConfig(auto_normalize_contrast=True)
+        exp = ExposureConfig(auto_exposure=True, auto_normalize_contrast=True)
         on = self._run(exp, 2.4)
-        ref_exp = ExposureConfig(auto_normalize_contrast=False)
+        ref_exp = ExposureConfig(auto_exposure=True, auto_normalize_contrast=False)
         ref = self._run(ref_exp, None)
         np.testing.assert_array_almost_equal(on, ref)
 
     def test_off_still_tracks_range(self):
-        exp = ExposureConfig(auto_normalize_contrast=False)
+        exp = ExposureConfig(auto_exposure=True, auto_normalize_contrast=False)
         dense = self._run(exp, 2.4)
         flat = self._run(exp, 0.7)
         self.assertFalse(np.allclose(dense, flat))

@@ -158,6 +158,10 @@ def migrate_flat_config(data: Dict[str, Any]) -> Dict[str, Any]:
         legacy = float(data.pop("contrast_mask") or 0.0)
         data.setdefault("contrast_mask_strength", min(max(legacy, 0.0) / 0.5, 1.0))
 
+    # The Linear tone profile became Standard: its levels are the scan levels.
+    if data.get("tone_profile") == "linear":
+        data["tone_profile"] = "standard"
+
     # True Black (BPC on) renamed to Paper Black with inverted polarity.
     if "true_black" in data:
         data["paper_black"] = not bool(data.pop("true_black"))

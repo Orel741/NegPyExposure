@@ -13,6 +13,7 @@ from negpy.features.flatfield.logic import set_gain_provider
 from negpy.infrastructure.storage.repository import StorageRepository
 from negpy.services.assets.migrations.bounds import migrate_stale_frame_bounds
 from negpy.services.assets.migrations.cast_removal import migrate_legacy_slide_cast_removal
+from negpy.services.assets.migrations.autos_off_default import migrate_autos_off_default
 from negpy.services.assets.migrations.color_clip import migrate_color_clip_default
 from negpy.services.assets.crosstalk import CrosstalkProfiles
 from negpy.services.assets.flatfield import FlatFieldProfiles
@@ -278,6 +279,7 @@ def main() -> None:
         migrate_auto_meter_for_positive_frames(repo)
         migrate_legacy_slide_cast_removal(repo)
         migrate_color_clip_default(repo)
+        migrate_autos_off_default(repo)
         migrate_baseline_card_split(repo)
         migrate_drop_section_pushes(repo)
         migrate_linear_raw_card_split(repo)

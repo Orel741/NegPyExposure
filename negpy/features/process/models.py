@@ -84,12 +84,12 @@ def cast_removal_for_mode(mode: str, strength: float) -> float:
 def auto_meter_for_mode(mode: str, current: bool) -> bool:
     """The value Auto Density/Auto Grade's toggle carries after a switch into Film Mode *mode*.
 
-    A negative starts metered (True): its exposure has no meaning until printed, so a meter
-    is what makes it printable at all. A slide starts unmetered (False): it was exposed
-    deliberately, and a meter would make a bracket converge. Only the other mode's default is
-    rewritten, so a toggle the user chose survives the switch (mirrors cast_removal_for_mode).
+    A negative starts unmetered (False): the scan stock's fixed levels print it, so a roll
+    prints alike. A slide starts unmetered (False): it was exposed deliberately, and a meter
+    would make a bracket converge. Only the other mode's default is rewritten, so a toggle the
+    user chose survives the switch (mirrors cast_removal_for_mode).
     """
-    negative_default, slide_default = True, False
+    negative_default, slide_default = False, False
     if mode == ProcessMode.E6:
         return slide_default if current == negative_default else current
     return negative_default if current == slide_default else current

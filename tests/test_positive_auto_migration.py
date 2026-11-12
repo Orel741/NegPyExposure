@@ -20,9 +20,10 @@ def repo(tmp_path):
 
 
 def _config(**process_overrides):
-    """A Slide frame, since only Slide can carry Positive."""
+    """A Slide frame with both Autos on, since only Slide can carry Positive."""
     cfg = WorkspaceConfig()
-    return replace(cfg, process=replace(cfg.process, process_mode=ProcessMode.E6, **process_overrides))
+    exposure = replace(cfg.exposure, auto_exposure=True, auto_normalize_contrast=True)
+    return replace(cfg, exposure=exposure, process=replace(cfg.process, process_mode=ProcessMode.E6, **process_overrides))
 
 
 def _load(repo, file_hash):

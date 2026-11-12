@@ -24,6 +24,11 @@ from negpy.features.transparency.logic import (
 MODE = ProcessMode.C41
 
 
+def _autos_on(**fields):
+    """An exposure section with both Autos on, which these tests meter."""
+    return ExposureConfig(**{"auto_exposure": True, "auto_normalize_contrast": True, **fields})
+
+
 def _metrics(**over):
     m = {
         "metered_anchor": 0.52,
@@ -41,7 +46,7 @@ def _edited(**over):
     """A frame with trims on top of both autos."""
     fields = dict(density=1.15, grade=105.0, shadow_density=-0.04, highlight_density=0.08)
     fields.update(over)
-    return ExposureConfig(**fields)
+    return _autos_on(**fields)
 
 
 def _printed(exposure, metrics):
@@ -78,7 +83,7 @@ def test_shown_values_are_what_prints_at_a_retuned_target(shadow_point):
 
 
 def test_shown_values_follow_the_meter():
-    exposure = ExposureConfig(paper_profile="neutral")
+    exposure = _autos_on(paper_profile="neutral")
     dense = print_shown_values(exposure, MODE, _metrics(metered_anchor=0.56))
     thin = print_shown_values(exposure, MODE, _metrics(metered_anchor=0.40))
     assert dense["density"] != thin["density"]
@@ -99,34 +104,34 @@ _FLAT = dict(metered_anchor=0.507, textural_range=0.221, norm_density_range=0.50
 
 @pytest.mark.parametrize("auto_grade", [True, False])
 def test_flat_negative_reaches_the_softest_grade(auto_grade):
-    exposure = ExposureConfig(paper_profile="pakon", auto_normalize_contrast=auto_grade, grade=170.0)
+    exposure = _autos_on(paper_profile="pakon", auto_normalize_contrast=auto_grade, grade=170.0)
     assert grade_at_softest(exposure, MODE, _metrics(**_FLAT))
 
 
 def test_normal_negative_can_go_softer():
-    assert not grade_at_softest(ExposureConfig(), MODE, _metrics())
+    assert not grade_at_softest(_autos_on(), MODE, _metrics())
 
 
 def test_slider_at_its_soft_end_is_no_warning():
-    exposure = ExposureConfig(auto_normalize_contrast=False, grade=180.0)
+    exposure = _autos_on(auto_normalize_contrast=False, grade=180.0)
     assert not grade_at_softest(exposure, MODE, _metrics(**_FLAT))
 
 
 def test_unmetered_frame_is_no_warning():
-    assert not grade_at_softest(ExposureConfig(), MODE, {})
+    assert not grade_at_softest(_autos_on(), MODE, {})
 
 
 def test_off_or_unmetered_autos_show_nothing():
-    exposure = ExposureConfig(auto_exposure=False, auto_normalize_contrast=False)
+    exposure = _autos_on(auto_exposure=False, auto_normalize_contrast=False)
     assert print_shown_values(exposure, MODE, _metrics()) == {}
-    assert print_shown_values(ExposureConfig(), MODE, {}) == {}
+    assert print_shown_values(_autos_on(), MODE, {}) == {}
     # A GPU render with Auto Grade just switched on publishes None for its meters.
-    partial = print_shown_values(ExposureConfig(), MODE, _metrics(textural_range=None, shadow_point=None, highlight_point=None))
+    partial = print_shown_values(_autos_on(), MODE, _metrics(textural_range=None, shadow_point=None, highlight_point=None))
     assert set(partial) == {"density"}
 
 
 def test_stored_value_passes_through_without_a_meter():
-    exposure = ExposureConfig(auto_exposure=False)
+    exposure = _autos_on(auto_exposure=False)
     assert print_stored_value(exposure, MODE, _metrics(), "density", 1.4) == 1.4
 
 
@@ -147,7 +152,7 @@ def _transfer_printed(exposure, metrics):
 @pytest.mark.parametrize("textural", [0.6, 1.4, 2.2])
 def test_transfer_shown_values_are_what_prints(textural):
     metrics = _metrics(metered_anchor=0.3, textural_range=textural, shadow_point=0.7, highlight_point=0.05)
-    exposure = ExposureConfig(density=0.9, grade=120.0, highlight_density=0.05)
+    exposure = _autos_on(density=0.9, grade=120.0, highlight_density=0.05)
     shown = transfer_shown_values(exposure, metrics)
 
     manual = replace(exposure, auto_exposure=False, auto_normalize_contrast=False, **shown)
@@ -157,7 +162,7 @@ def test_transfer_shown_values_are_what_prints(textural):
 @pytest.mark.parametrize("field", ["density", "grade", "highlight_density"])
 def test_transfer_stored_value_inverts_shown(field):
     metrics = _metrics(metered_anchor=0.3, textural_range=0.9, shadow_point=None, highlight_point=0.05)
-    exposure = ExposureConfig(density=0.9, grade=120.0, highlight_density=0.05)
+    exposure = _autos_on(density=0.9, grade=120.0, highlight_density=0.05)
     shown = transfer_shown_values(exposure, metrics)[field]
     assert transfer_stored_value(exposure, metrics, field, shown) == pytest.approx(getattr(exposure, field), abs=1e-6)
 

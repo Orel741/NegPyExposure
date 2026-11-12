@@ -119,8 +119,8 @@ class ExposureConfig:
     # Uniform paper pre-exposure as a fraction of the threshold exposure. [0, 1]; 0 = off.
     preflash: float = 0.0
     cast_removal_strength: float = 0.5
-    auto_exposure: bool = True
-    auto_normalize_contrast: bool = True
+    auto_exposure: bool = False
+    auto_normalize_contrast: bool = False
     render_intent: str = RenderIntent.PRINT
     paper_profile: str = "scan"
     # Density-domain saturation, composed into the dye_mix kernel slot (see
@@ -309,8 +309,8 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
     # A scan profile's Auto levels: the code, as a fraction of the range, that the textured
     # dark tail (shadow_reach_percentile) and bright tail (highlight_hold_percentile) print at.
     # Outside 0 to 1 clips: the tail prints past black or white.
-    "scan_black_level": -0.05,
-    "scan_white_level": 1.15,
+    "scan_black_level": 0.0,
+    "scan_white_level": 1.0,
     # Bounds on the density span (normalized) the Auto levels stretch from the shadow tail to the
     # highlight tail. The highlight end moves, the shadow end holds: a narrow frame is not stretched
     # into noise, and a frame with a large bright area is not printed dark under it.
@@ -360,7 +360,6 @@ TONE_PROFILES: Dict[str, Tuple[float, float, float, float]] = {
     "standard": (float(EXPOSURE_CONSTANTS["scan_black_level"]), float(EXPOSURE_CONSTANTS["scan_white_level"]), 0.0, 1.0),
     "soft": (0.0, 1.10, 0.1, 0.85),
     "hard": (-0.08, 1.20, 0.0, 1.2),
-    "linear": (0.0, 1.0, 0.0, 1.0),
     "flat": (0.02, 1.0, 0.15, 0.8),
     "deep": (-0.10, 1.15, -0.2, 1.1),
 }

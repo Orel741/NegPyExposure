@@ -58,7 +58,6 @@ _TONE_PROFILE_LABELS = {
     "standard": tr("Standard"),
     "soft": tr("Soft"),
     "hard": tr("Hard"),
-    "linear": tr("Linear"),
     "flat": tr("Flat"),
     "deep": tr("Deep"),
 }
