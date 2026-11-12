@@ -21,6 +21,7 @@ from negpy.features.altprocess.models import AltProcessConfig
 from negpy.features.toning.models import ToningConfig
 from negpy.features.finish.models import FinishConfig
 from negpy.features.flatfield.models import FlatFieldConfig
+from negpy.features.leak.models import LeakConfig
 from negpy.features.rgbscan.models import RgbScanConfig
 from negpy.features.hdr.models import HdrConfig, hdr_active
 from negpy.features.stitch.models import StitchConfig
@@ -357,6 +358,7 @@ class WorkspaceConfig:
     process: ProcessConfig = field(default_factory=ProcessConfig)
     exposure: ExposureConfig = field(default_factory=ExposureConfig)
     flatfield: FlatFieldConfig = field(default_factory=FlatFieldConfig)
+    leak: LeakConfig = field(default_factory=LeakConfig)
     rgbscan: RgbScanConfig = field(default_factory=RgbScanConfig)
     stitch: StitchConfig = field(default_factory=StitchConfig)
     hdr: HdrConfig = field(default_factory=HdrConfig)
@@ -400,6 +402,7 @@ class WorkspaceConfig:
         res.update(asdict(self.process))
         res.update(asdict(self.exposure))
         res.update(asdict(self.flatfield))
+        res.update(asdict(self.leak))
         res.update(asdict(self.rgbscan))
         res.update(asdict(self.stitch))
         res.update(asdict(self.hdr))
@@ -428,6 +431,7 @@ class WorkspaceConfig:
             ProcessConfig,
             ExposureConfig,
             FlatFieldConfig,
+            LeakConfig,
             RgbScanConfig,
             StitchConfig,
             HdrConfig,
@@ -527,6 +531,7 @@ class WorkspaceConfig:
             process=_plain(ProcessConfig),
             exposure=_plain(ExposureConfig),
             flatfield=_plain(FlatFieldConfig),
+            leak=_plain(LeakConfig),
             rgbscan=_plain(RgbScanConfig),
             stitch=_build(_build_stitch, StitchConfig),
             hdr=_build(_build_hdr, HdrConfig),

@@ -278,6 +278,17 @@ Wie der Abzug präsentiert wird. Die übrigen Regler jedes Effekts erscheinen, s
 *   **Ausgefeilte Bildbühne**: **Breite** zeichnet einen rauen schwarzen Rahmen um das Bild, wie eine im Labor breiter gefeilte Negativbühne. **Rauheit**, **Streulicht** (ein graues Glühen außerhalb des Rahmens) und **Ecken** formen ihn.
 *   **Rand**: **Breite** legt ein Passepartout um den Abzug. **Unteres Gewicht** macht den unteren Rand breiter, wie bei einem Bilderrahmen. **Farbe**: **Papierweiß** passt zum Papier, **Benutzerdefiniert** nutzt eine Farbe, die du wählst.
 
+<!-- panel:leak src:28f84647 -->
+### 7.3 Lichteinfall
+
+Entfernt einen Lichteinfall: einen roten, orangen oder magentafarbenen Schleier, den Licht durch eine Kamera oder eine Patrone auf den Film bringt. NegPy misst den Lichteinfall auf dem klaren Film um das Bild, wo kein Bild ihn verdeckt, und entfernt ihn aus dem ganzen Bild.
+
+*   **Lichteinfall messen**: zeigt den ganzen Scan mit einem Rahmen aus Punkten. Ziehe die Punkte auf klaren Film: den Streifen zwischen der Perforation und dem Bild und die Lücke zwischen zwei Bildern. Eine Ecke bewegt die Punkte ihrer zwei Seiten mit. Halte jeden Punkt von der Perforation und der Randbeschriftung fern. Das × entfernt den Rahmen und die Korrektur.
+*   **Lichteinfall anwenden** (die Glühbirne): schaltet die Korrektur ein und aus.
+*   **Stärke**: wie viel des gemessenen Lichteinfalls entfernt wird. 1 entfernt, was gemessen wurde.
+
+Der Lichteinfall wird als zusätzliches Licht entfernt. So verlieren die Schatten ihren Schleier, und die Lichter bleiben, wie sie sind. Einen Lichteinfall, der den Rand des Bildes nicht erreicht, kann NegPy nicht messen.
+
 <!-- panel:presets src:32c2813a -->
 ### Vorgaben
 

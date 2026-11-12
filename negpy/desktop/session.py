@@ -84,12 +84,21 @@ class ToolMode(Enum):
     FILM_BASE = auto()
     DMIN_PICK = auto()
     DMAX_PICK = auto()
+    LEAK_FRAME = auto()
 
 
 # These tools' renders carry crop_preview_full, which skips the crop, the border and the filed carrier.
-# Film Base shows the whole scan too: the rebate it reads lies outside the crop.
+# Film Base and Light Leak show the whole scan too: the rebate they read lies outside the crop.
 UNCROPPED_PREVIEW_TOOLS = frozenset(
-    {ToolMode.CROP_MANUAL, ToolMode.ANALYSIS_DRAW, ToolMode.KEYSTONE_LINES, ToolMode.FILM_BASE, ToolMode.DMIN_PICK, ToolMode.DMAX_PICK}
+    {
+        ToolMode.CROP_MANUAL,
+        ToolMode.ANALYSIS_DRAW,
+        ToolMode.KEYSTONE_LINES,
+        ToolMode.FILM_BASE,
+        ToolMode.DMIN_PICK,
+        ToolMode.DMAX_PICK,
+        ToolMode.LEAK_FRAME,
+    }
 )
 # Esc puts back what these changed since they opened: each adjusts one thing as often as it likes.
 REVERTIBLE_TOOLS = frozenset({ToolMode.CROP_MANUAL, ToolMode.ANALYSIS_DRAW})

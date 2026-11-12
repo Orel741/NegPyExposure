@@ -427,6 +427,17 @@ How the print is presented. The other sliders of each effect show once its first
 *   **Filed Carrier**: **Width** draws a rough black frame around the picture, as a darkroom negative carrier that was filed wider does. **Roughness**, **Flare** (a gray glow outside the frame) and **Corners** shape it.
 *   **Border**: **Width** puts a mat around the print. **Bottom Weight** makes the bottom wider, as on a framing mat. **Color**: **Paper White** matches the paper, **Custom** uses a color you pick.
 
+<!-- panel:leak -->
+### 7.3 Light Leak
+
+Removes a light leak: a red, orange or magenta glow that light through a camera or a cassette puts on the film. NegPy measures the leak on the clear film around the picture, where no picture hides it, and takes it out of the whole frame.
+
+*   **Measure Leak**: shows the whole scan with a frame of points. Drag the points onto clear film: the strip between the perforations and the picture, and the gap between two frames. A corner moves the points of its two sides with it. Keep each point off the perforations and the edge print. The × removes the frame and the correction.
+*   **Apply Light Leak** (the bulb): turns the correction on and off.
+*   **Strength**: how much of the measured leak comes out. 1 takes out what was measured.
+
+The leak is taken out as added light, so the shadows lose their glow and the highlights stay as they are. A leak that does not reach the edge of the frame cannot be measured.
+
 ---
 
 ## 8. Favorites tab

@@ -38,6 +38,7 @@ GUIDED_KEYS = (
     "altproc",
     "toning",
     "retouch",
+    "leak",
     "finish",
     "library",
     "frames",

@@ -63,6 +63,7 @@ from negpy.features.exposure.analysis import (
 from negpy.features.exposure.bw_filter import printed_exposure
 from negpy.features.exposure.densitometer import zone_roman
 from negpy.features.exposure.papers import profiles_for_mode
+from negpy.features.leak.logic import corner_indices
 from negpy.features.geometry.logic import (
     compute_geometry_crop_rect,
     rotation_drag_angle,
@@ -438,6 +439,7 @@ class CanvasOverlay(QWidget):
     zoom_toggle_requested = pyqtSignal(QPointF)  # double-click with no tool armed
     zone_shares_changed = pyqtSignal(object)  # each zone's share of a newly measured frame
     zone_pointer_changed = pyqtSignal(object)  # zone under the pointer, or None
+    leak_points_changed = pyqtSignal(object)  # Light Leak frame points, raw-normalized
 
     def __init__(self, state: AppState, parent=None):
         super().__init__(parent)
@@ -557,6 +559,9 @@ class CanvasOverlay(QWidget):
 
         # Zone-placement pin being dragged (the controller re-reads the tone as it moves).
         self._pin_drag_index: Optional[int] = None
+        # Light Leak frame drag: the grabbed point and the frame as it moves, raw-normalized.
+        self._leak_drag: Optional[int] = None
+        self._leak_working: Optional[List[Tuple[float, float]]] = None
 
         # Densitometer reading under the pointer, for the cursor probe chip.
         self._probe_reading: Optional[Any] = None
@@ -734,6 +739,9 @@ class CanvasOverlay(QWidget):
             self._keystone_draw_p2 = None
         if mode != ToolMode.ZONE_PLACE:
             self._pin_drag_index = None
+        if mode != ToolMode.LEAK_FRAME:
+            self._leak_drag = None
+            self._leak_working = None
         self.update()
 
     def clear_keystone_lines(self) -> None:
@@ -1195,6 +1203,9 @@ class CanvasOverlay(QWidget):
         if self._tool_mode in (ToolMode.DMIN_PICK, ToolMode.DMAX_PICK):
             self._draw_bounds_picks(painter)
 
+        if self._tool_mode == ToolMode.LEAK_FRAME:
+            self._draw_leak_frame(painter)
+
         if (
             self._buffer_overlay_visible
             and self._buffer_overlay_ratio > 1e-4
@@ -1223,7 +1234,7 @@ class CanvasOverlay(QWidget):
                 self._tool_mode == ToolMode.CLONE and not self.state.clone_picking
             ):
                 self._draw_brush(painter)
-            elif self._tool_mode not in _SHAPE_FOR_TOOL:
+            elif self._tool_mode not in _SHAPE_FOR_TOOL and self._tool_mode != ToolMode.LEAK_FRAME:
                 pen = QPen(with_alpha(THEME.mark_photo, 80), 1, Qt.PenStyle.DotLine)
                 pen.setCosmetic(True)
                 painter.setPen(pen)
@@ -2846,6 +2857,73 @@ class CanvasOverlay(QWidget):
             return
         _draw_dashed_frame(painter, rect.intersected(self._view_rect))
 
+    def _leak_uv_grid(self) -> Optional[np.ndarray]:
+        with self.state.metrics_lock:
+            return self.state.last_metrics.get("uv_grid")
+
+    def _leak_screen_points(self) -> List[QPointF]:
+        points = self._leak_working if self._leak_working is not None else self.state.config.leak.leak_points
+        uv_grid = self._leak_uv_grid()
+        if not points or uv_grid is None:
+            return []
+        return [self._raw_to_screen(rx, ry, uv_grid) for rx, ry in points]
+
+    def _hit_leak_point(self, pos: QPointF) -> Optional[int]:
+        best, best_d = None, _CROP_HANDLE_PX * _CROP_HANDLE_PX
+        for i, p in enumerate(self._leak_screen_points()):
+            d = (pos.x() - p.x()) ** 2 + (pos.y() - p.y()) ** 2
+            if d <= best_d:
+                best, best_d = i, d
+        return best
+
+    def _drag_leak_point(self, pos: QPointF) -> None:
+        """Move the grabbed point. A corner carries the points of its two sides along, each by
+        how near it lies to the corner, so the sides keep their shape."""
+        uv_grid = self._leak_uv_grid()
+        norm = self._map_to_image_coords_unbounded(pos)
+        if uv_grid is None or norm is None or self._leak_working is None or self._leak_drag is None:
+            return
+        rx, ry = CoordinateMapping.map_click_to_raw(norm[0], norm[1], uv_grid)
+        rx, ry = float(np.clip(rx, 0.0, 1.0)), float(np.clip(ry, 0.0, 1.0))
+        pts = self._leak_working
+        i = self._leak_drag
+        dx, dy = rx - pts[i][0], ry - pts[i][1]
+        n = len(pts)
+        corners = corner_indices(n)
+        if i in corners:
+            step = n // 4
+            for k in range(1, step):
+                t = 1.0 - k / step
+                for j in ((i + k) % n, (i - k) % n):
+                    pts[j] = (float(np.clip(pts[j][0] + dx * t, 0.0, 1.0)), float(np.clip(pts[j][1] + dy * t, 0.0, 1.0)))
+        pts[i] = (rx, ry)
+        self.update()
+
+    def _draw_leak_frame(self, painter: QPainter) -> None:
+        """The Light Leak measuring frame: a closed line through its points, corners square."""
+        pts = self._leak_screen_points()
+        if len(pts) < 4:
+            return
+        corners = set(corner_indices(len(pts)))
+        painter.save()
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        poly = QPolygonF(pts)
+        for color, style in ((with_alpha(THEME.mark_shadow, 160), Qt.PenStyle.SolidLine), (QColor(THEME.mark_photo), Qt.PenStyle.DashLine)):
+            pen = QPen(color, 1, style)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.drawPolygon(poly)
+        pen = QPen(QColor(THEME.mark_photo), 1.5)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.setBrush(with_alpha(THEME.mark_shadow, 170))
+        for i, p in enumerate(pts):
+            if i in corners:
+                painter.drawRect(QRectF(p.x() - 5, p.y() - 5, 10, 10))
+            else:
+                painter.drawEllipse(p, 4.5, 4.5)
+        painter.restore()
+
     def _draw_local_masks(self, painter: QPainter) -> None:
         if self._view_rect.isEmpty():
             return
@@ -3269,6 +3347,16 @@ class CanvasOverlay(QWidget):
             event.accept()
             return
 
+        if self._tool_mode == ToolMode.LEAK_FRAME:
+            hit = self._hit_leak_point(event.position())
+            if hit is not None:
+                self._leak_drag = hit
+                self._leak_working = list(self.state.config.leak.leak_points)
+                self.setCursor(Qt.CursorShape.ClosedHandCursor)
+                self._begin_auto_pan(event.position())
+            event.accept()
+            return
+
         # A placed pin is a handle, so grabbing one drags it and only a press on bare frame
         # drops a new pin.
         if self._tool_mode == ToolMode.ZONE_PLACE:
@@ -3401,6 +3489,13 @@ class CanvasOverlay(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self._mouse_pos = event.position()
         self._track_auto_pan_pointer(event.position())
+        if self._leak_drag is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            self._drag_leak_point(event.position())
+            event.accept()
+            return
+        if self._tool_mode == ToolMode.LEAK_FRAME and self._leak_drag is None:
+            hover = self._hit_leak_point(event.position()) is not None
+            self.setCursor(Qt.CursorShape.OpenHandCursor if hover else Qt.CursorShape.ArrowCursor)
         if self.state.zones_overlay:
             self._update_zone_hover(event.position())
 
@@ -3890,6 +3985,18 @@ class CanvasOverlay(QWidget):
         if self._split_dragging:
             self._split_dragging = False
             self.unsetCursor()
+            self.update()
+            event.accept()
+            return
+
+        if self._leak_drag is not None:
+            points = self._leak_working
+            self._leak_drag = None
+            self._leak_working = None
+            self._stop_auto_pan()
+            if points is not None and tuple(points) != self.state.config.leak.leak_points:
+                self.leak_points_changed.emit(tuple(points))
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
             self.update()
             event.accept()
             return
