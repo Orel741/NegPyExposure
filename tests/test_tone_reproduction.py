@@ -61,12 +61,12 @@ def _negative_scan(scene: np.ndarray) -> np.ndarray:
 
 
 def _print_densities(spread: float) -> tuple[np.ndarray, np.ndarray, float, float]:
-    """Run the default Normalization + Print path; return (D_scene, D_print, deepest and
-    brightest textural scene densities)."""
+    """Run the metered Normalization + Print path (both Autos on); return (D_scene, D_print,
+    deepest and brightest textural scene densities)."""
     scene, deepest, brightest = _scene_densities(spread)
     img = _negative_scan(scene)
     config = WorkspaceConfig()
-    config = replace(config, exposure=replace(config.exposure, paper_profile="neutral"))
+    config = replace(config, exposure=replace(config.exposure, paper_profile="neutral", auto_exposure=True, auto_normalize_contrast=True))
     ctx = PipelineContext(scale_factor=1.0, original_size=img.shape[:2], process_mode=ProcessMode.C41)
     norm = NormalizationProcessor(config.process).process(img, ctx)
     out = PhotometricProcessor(config.exposure).process(norm, ctx)

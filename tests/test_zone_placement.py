@@ -352,6 +352,8 @@ class TestZonePlacementLifecycle(unittest.TestCase):
         self.assertEqual(self.controller.state.active_tool, ToolMode.NONE)
 
     def test_apply_commits_and_flips_the_right_autos(self):
+        cfg = self.controller.state.config
+        self.controller.state.config = replace(cfg, exposure=replace(cfg.exposure, auto_exposure=True, auto_normalize_contrast=True))
         self._place(0.5, 0.2)
         self.controller.apply_zone_placement()
         committed = self.mock_session_manager.update_config.call_args

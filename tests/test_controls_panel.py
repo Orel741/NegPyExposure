@@ -219,21 +219,21 @@ def test_reset_exposure_fields_turns_auto_off_for_a_slide():
     assert new_cfg.exposure.density == ExposureConfig().density
 
 
-def test_reset_exposure_fields_turns_auto_on_for_a_negative_frame():
+def test_reset_exposure_fields_turns_auto_off_for_a_negative_frame():
     panel = MagicMock()
     panel.controller.state = AppState()
     cfg = panel.controller.state.config
     panel.controller.state.config = replace(
         cfg,
         process=replace(cfg.process, positive_source=False),
-        exposure=replace(cfg.exposure, auto_exposure=False, auto_normalize_contrast=False),
+        exposure=replace(cfg.exposure, auto_exposure=True, auto_normalize_contrast=True),
     )
 
     ControlsPanel._reset_exposure_fields(panel, ("auto_exposure", "auto_normalize_contrast"))
 
     new_cfg = panel.controller.session.update_config.call_args[0][0]
-    assert new_cfg.exposure.auto_exposure is True
-    assert new_cfg.exposure.auto_normalize_contrast is True
+    assert new_cfg.exposure.auto_exposure is False
+    assert new_cfg.exposure.auto_normalize_contrast is False
 
 
 def test_sync_modified_dots_does_not_flag_a_positive_frames_own_auto_default():

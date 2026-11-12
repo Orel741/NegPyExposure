@@ -240,7 +240,7 @@ class TestGpuTiledTransferParity(unittest.TestCase):
 
     def test_tiled_raw_slide_meters_like_the_preview(self):
         settings = self._slide()
-        self.assertTrue(settings.exposure.auto_exposure and settings.exposure.auto_normalize_contrast)
+        settings = replace(settings, exposure=replace(settings.exposure, auto_exposure=True, auto_normalize_contrast=True))
         self._assert_parity(settings, "Tiled export metered a raw slide differently")
 
     def test_tiled_positive_meters_like_the_preview(self):

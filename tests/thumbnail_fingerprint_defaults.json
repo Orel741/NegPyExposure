@@ -15,8 +15,8 @@
    "sabattier_strength": "1.3"
   },
   "exposure": {
-   "auto_exposure": "true",
-   "auto_normalize_contrast": "true",
+   "auto_exposure": "false",
+   "auto_normalize_contrast": "false",
    "blacks": "0.0",
    "brightness": "0.0",
    "bw_filter": "\"none\"",
@@ -235,5 +235,5 @@
    "vanadium_strength": "0.0"
   }
  },
- "render_version": 38
+ "render_version": 39
 }

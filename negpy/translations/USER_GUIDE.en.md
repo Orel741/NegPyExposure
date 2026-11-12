@@ -276,13 +276,13 @@ Corrects the color of the print, as the color filters of a darkroom enlarger do.
 
 How light or dark the picture is, and how much contrast it has. Each slider starts at 0, and a double-click puts it back.
 
-*   **Tone profile** (Digital (Scan) stock only): the starting look. **Standard** is the default. **Soft** and **Hard** have less and more contrast. **Linear** clips nothing at black or white. **Flat** is low in contrast, as a start for your own edit. **Deep** has dark shadows.
+*   **Tone profile** (Digital (Scan) stock only): the starting look. **Standard** is the default and clips nothing at black or white. **Soft** and **Hard** have less and more contrast. **Flat** is low in contrast, as a start for your own edit. **Deep** has dark shadows.
 *   **Exposure**: brightness in stops (EV). +1 doubles the light in the midtones.
 *   **Brightness** (Digital (Scan) stock only): lightens or darkens the midtones. Black and white stay where they are.
 *   **Contrast**: the difference between dark and light tones. Higher gives more contrast.
 *   **Lights** / **Darks**: lighten (positive) or darken (negative) only the highlights or only the shadows.
 *   **Whites** / **Blacks**: move the white point or the black point. Positive Whites brightens the lightest tones. Negative Blacks deepens the darkest tones.
-*   **Auto** (the wand, also on the Exposure tab's bar): **Auto Density** and **Auto Grade** set brightness and contrast for each frame, so a roll prints evenly. The sliders then adjust from the automatic values. Right-click the wand to turn both on or off. The Auto menu also has:
+*   **Auto** (the wand, also on the Exposure tab's bar): **Auto Density** and **Auto Grade** set brightness and contrast for each frame. Both start off. The sliders then adjust from the automatic values. Right-click the wand to turn both on or off. The Auto menu also has:
     *   **Set Targets…**: the brightness and contrast Auto aims for.
     *   **Bake Auto Density/Grade**: keeps this frame's automatic values and turns Auto off for it.
     *   **Hold Black**: when you lighten the shadows, the deepest blacks stay black.

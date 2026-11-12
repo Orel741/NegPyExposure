@@ -23,12 +23,12 @@ def test_the_same_mode_keeps_a_deliberate_slide_strength():
     assert with_process_mode(slide, ProcessMode.E6) is slide
 
 
-def test_leaving_slide_drops_positive_and_restores_the_autos():
+def test_leaving_slide_drops_positive_and_keeps_the_autos_off():
     positive = with_positive_source(_slide(), True)
     assert positive.exposure.auto_exposure is False
     neg = with_process_mode(positive, ProcessMode.BW)
     assert neg.process.positive_source is False
-    assert neg.exposure.auto_exposure is True
+    assert neg.exposure.auto_exposure is False
 
 
 def test_positive_is_refused_off_slide_and_a_repeat_is_a_no_op():

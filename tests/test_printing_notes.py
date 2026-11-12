@@ -77,7 +77,7 @@ def test_the_recipe_reports_every_decision_that_moved() -> None:
 
 
 def test_auto_flags_are_marked() -> None:
-    lines = recipe_lines(ExposureConfig(), LocalAdjustmentsConfig(), FinishConfig())
+    lines = recipe_lines(ExposureConfig(auto_exposure=True, auto_normalize_contrast=True), LocalAdjustmentsConfig(), FinishConfig())
 
     assert "Print Density 1.00 (auto)" in lines
     assert "Grade ISO-R 115 (auto)" in lines

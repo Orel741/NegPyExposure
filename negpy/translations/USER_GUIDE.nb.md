@@ -132,18 +132,18 @@ Korrigerer fargen i kopien, slik fargefiltrene i et forstørrelsesapparat i mør
 *   **Fjerning av fargestikk**: fjerner et fargestikk som er ulikt i de mørke og lyse delene av bildet. Den starter på 0,5 (halvparten) for fargenegativer og på 0 for dias. Blader, himmel og vann regnes ikke som grått, så de beholder fargen.
 *   **Filter**: et farget filter, som på kameraobjektivet for svart-hvitt-film. Det vises bare for et fargenegativ eller fargedias i S/H, og erstatter kontrollene ovenfor. Hvert filter gjør fargene motsatt av sin egen mørkere. Gul #8, Dyp gul #15, Oransje #21 og Rød #25 gjør en blå himmel mørkere, trinn for trinn. Rød gjør også blader mørke og hud blek. Gulgrønn #11 og Grønn #58 gjør blader lysere og hud mørkere. Ingen gir utseendet til en vanlig svart-hvitt-film.
 
-<!-- panel:tone src:d7774fed -->
+<!-- panel:tone src:c50f5a77 -->
 ### 5.2 Tone: lyshet og kontrast
 
 Hvor lyst eller mørkt bildet er, og hvor mye kontrast det har. Hver glidebryter starter på 0, og et dobbeltklikk setter den tilbake.
 
-*   **Toneprofil** (bare med papiret Digital (Scan)): utgangsuttrykket. **Standard** er standarden. **Myk** og **Hard** har mindre og mer kontrast. **Lineær** klipper ingenting ved svart eller hvitt. **Flat** har lav kontrast, som utgangspunkt for din egen redigering. **Dyp** har mørke skygger.
+*   **Toneprofil** (bare med papiret Digital (Scan)): utgangsuttrykket. **Standard** er standarden og klipper ingenting ved svart eller hvitt. **Myk** og **Hard** har mindre og mer kontrast. **Flat** har lav kontrast, som utgangspunkt for din egen redigering. **Dyp** har mørke skygger.
 *   **Eksponering**: lyshet i blendertrinn (EV). +1 dobler lyset i mellomtonene.
 *   **Lysstyrke** (bare med papiret Digital (Scan)): gjør mellomtonene lysere eller mørkere. Svart og hvitt blir der de er.
 *   **Kontrast**: forskjellen mellom mørke og lyse toner. Høyere gir mer kontrast.
 *   **Lyse toner** / **Mørke toner**: gjør bare høylysene eller bare skyggene lysere (positiv) eller mørkere (negativ).
 *   **Hvitt** / **Svart**: flytter hvitpunktet eller svartpunktet. Positiv Hvitt gjør de lyseste tonene lysere. Negativ Svart gjør de mørkeste tonene dypere.
-*   **Auto** (tryllestaven, også på linjen i fanen Eksponering): **Autotetthet** og **Autogradering** angir lyshet og kontrast for hvert bilde, så en rull kopieres jevnt. Glidebryterne justerer da fra de automatiske verdiene. Høyreklikk tryllestaven for å slå begge på eller av. Auto-menyen har også:
+*   **Auto** (tryllestaven, også på linjen i fanen Eksponering): **Autotetthet** og **Autogradering** angir lyshet og kontrast for hvert bilde. Begge er av i starten. Glidebryterne justerer da fra de automatiske verdiene. Høyreklikk tryllestaven for å slå begge på eller av. Auto-menyen har også:
     *   **Angi mål…**: lysheten og kontrasten Auto sikter mot.
     *   **Bak inn autotetthet/-gradering**: beholder de automatiske verdiene for dette bildet og slår av Auto for det.
     *   **Hold svart**: når du gjør skyggene lysere, forblir de dypeste svarttonene svarte.

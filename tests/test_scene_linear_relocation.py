@@ -7,7 +7,6 @@ from dataclasses import replace
 import numpy as np
 
 from negpy.domain.models import WorkspaceConfig
-from negpy.features.exposure.models import ExposureConfig
 from negpy.features.geometry.models import GeometryConfig
 from negpy.features.process.models import ProcessConfig
 from negpy.services.rendering.engine import DarkroomEngine
@@ -15,7 +14,7 @@ from negpy.services.rendering.engine import DarkroomEngine
 _POINTS = [(0, 0), (8, 8), (20, 30), (32, 32), (50, 50), (60, 10)]
 
 # Golden pixel values (Adobe-RGB-TRC-encoded engine output, scene-linear pipeline,
-# default config — paper_dmin off, paper_black off, cast_removal_strength 0.5, sharpen 0.25,
+# default config with both Autos on — paper_dmin off, paper_black off, cast_removal_strength 0.5, sharpen 0.25,
 # dye_separation 1.0).
 _GOLDEN = {
     "default": [
@@ -72,7 +71,7 @@ def _base_settings() -> WorkspaceConfig:
         WorkspaceConfig(),
         geometry=geo,
         process=replace(ProcessConfig(), white_point_offset=0.0, black_point_offset=0.0, color_range_clip=1.0),
-        exposure=replace(WorkspaceConfig().exposure, paper_profile="neutral"),
+        exposure=replace(WorkspaceConfig().exposure, paper_profile="neutral", auto_exposure=True, auto_normalize_contrast=True),
     )
 
 
@@ -80,8 +79,8 @@ def test_full_engine_output_preserved_after_relocation():
     base = _base_settings()
     configs = {
         "default": base,
-        "expo_dark": replace(base, exposure=ExposureConfig(density=-1.0, grade=2.0, paper_profile="neutral")),
-        "expo_cmy": replace(base, exposure=ExposureConfig(wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5, paper_profile="neutral")),
+        "expo_dark": replace(base, exposure=replace(base.exposure, density=-1.0, grade=2.0)),
+        "expo_cmy": replace(base, exposure=replace(base.exposure, wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5)),
     }
     img = _synthetic_image()
     eng = DarkroomEngine()

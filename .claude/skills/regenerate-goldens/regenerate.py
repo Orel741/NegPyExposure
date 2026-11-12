@@ -14,7 +14,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root, for `tests` + `negpy`
 
-from negpy.features.exposure.models import ExposureConfig
 from negpy.services.rendering.engine import DarkroomEngine
 from tests.test_characteristic_curve import _curve
 from tests.test_scene_linear_relocation import _base_settings, _synthetic_image, _POINTS
@@ -24,8 +23,8 @@ def relocation_goldens() -> None:
     """test_scene_linear_relocation.py -> _GOLDEN (full engine, default + exposure variants)."""
     configs = {
         "default": _base_settings(),
-        "expo_dark": replace(_base_settings(), exposure=ExposureConfig(density=-1.0, grade=2.0)),
-        "expo_cmy": replace(_base_settings(), exposure=ExposureConfig(wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5)),
+        "expo_dark": replace(_base_settings(), exposure=replace(_base_settings().exposure, density=-1.0, grade=2.0)),
+        "expo_cmy": replace(_base_settings(), exposure=replace(_base_settings().exposure, wb_cyan=0.3, wb_magenta=-0.2, wb_yellow=0.5)),
     }
     img = _synthetic_image()
     eng = DarkroomEngine()

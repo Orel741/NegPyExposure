@@ -98,6 +98,11 @@ class TestAppController(unittest.TestCase):
         self.assertEqual(args[0], "half_frame_profile")
         self.assertEqual(args[1], {"crop_rect": [0.0, 0.0, 1.0, 1.0], "split_x": 0.6, "gutter_thickness": 0.02, "split_axis": "x"})
 
+    def _autos_on(self):
+        """Both Autos on in the open frame, which the bake tests freeze."""
+        cfg = self.controller.state.config
+        self.controller.state.config = replace(cfg, exposure=replace(cfg.exposure, auto_exposure=True, auto_normalize_contrast=True))
+
     def _bake_meters(self):
         from negpy.features.exposure.normalization import LogNegativeBounds
 
@@ -111,6 +116,7 @@ class TestAppController(unittest.TestCase):
         }
 
     def test_baked_exposure_config_freezes_autos_to_shown_values(self):
+        self._autos_on()
         from negpy.desktop.auto_sliders import shown_values
 
         meters = self._bake_meters()
@@ -141,6 +147,7 @@ class TestAppController(unittest.TestCase):
         self.assertIsNone(self.controller._baked_config_for_file({"hash": "abc#roll:r1", "path": "/tmp/a.jpg"}))
 
     def test_bake_to_roll_bakes_active_frame_and_others(self):
+        self._autos_on()
         meters = self._bake_meters()
         self.controller.state.uploaded_files = [
             {"hash": "a", "path": "/tmp/a.jpg"},
@@ -167,6 +174,7 @@ class TestAppController(unittest.TestCase):
 
     def test_bake_to_roll_meters_and_bakes_unviewed_frame(self):
         """A visible frame with no meters yet is metered on demand, then frozen, not skipped."""
+        self._autos_on()
         meters = self._bake_meters()
         self.controller.state.uploaded_files = [
             {"hash": "a", "path": "/tmp/a.jpg"},
@@ -199,6 +207,7 @@ class TestAppController(unittest.TestCase):
         return _slide_config(cfg) if transfer else cfg
 
     def test_bake_for_export_reflects_current_frame_and_persists_others(self):
+        self._autos_on()
         # the open frame truth is the live config, so the bake writes it there, not DB-only
         meters = self._bake_meters()
         files = [
@@ -4971,9 +4980,9 @@ class TestPresetExportSelected(unittest.TestCase):
         self.assertFalse(passed.exposure.auto_exposure)
         self.assertFalse(passed.exposure.auto_normalize_contrast)
 
-    def test_leaving_slide_drops_positive_and_restores_the_autos(self):
+    def test_leaving_slide_drops_positive_and_keeps_the_autos_off(self):
         """Positive is Slide-only, so a mode switch away from Slide clears it, and Auto
-        Density/Auto Grade go back to the negative's default (auto_meter_for_mode)."""
+        Density/Auto Grade stay at the negative's default, off (auto_meter_for_mode)."""
         from negpy.features.process.models import ProcessMode
 
         self.mock_session_manager.state.active_roll_id = None
@@ -4983,8 +4992,8 @@ class TestPresetExportSelected(unittest.TestCase):
 
         passed = self.mock_session_manager.update_config.call_args.args[0]
         self.assertFalse(passed.process.positive_source)
-        self.assertTrue(passed.exposure.auto_exposure)
-        self.assertTrue(passed.exposure.auto_normalize_contrast)
+        self.assertFalse(passed.exposure.auto_exposure)
+        self.assertFalse(passed.exposure.auto_normalize_contrast)
 
     def test_request_reset_roll_resets_every_visible_frame(self):
         self.controller.request_reset_roll()

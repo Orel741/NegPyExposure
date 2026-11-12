@@ -127,11 +127,16 @@ def test_hold_black_rides_the_auto_menu_without_lighting_it(qapp):
     assert not sidebar.hold_black_action.isVisible()
 
 
+def _autos_on(cfg):
+    return replace(cfg, exposure=replace(cfg.exposure, auto_exposure=True, auto_normalize_contrast=True))
+
+
 def _metered_sidebar():
     from negpy.features.exposure.normalization import LogNegativeBounds
 
     controller = MagicMock()
     controller.state = AppState()
+    controller.state.config = _autos_on(controller.state.config)
     controller.state.current_file_hash = "frame"
     controller.state.auto_meters["frame"] = {
         "metered_anchor": 0.55,
@@ -333,6 +338,7 @@ def test_confirmed_target_change_warns_but_no_change_does_not(qapp, monkeypatch)
 def test_flat_negative_shows_the_softest_grade_hint(qapp):
     controller = MagicMock()
     controller.state = AppState()
+    controller.state.config = _autos_on(controller.state.config)
     controller.state.current_file_hash = "flat"
     sidebar = ToneSidebar(controller)
     sidebar.sync_ui()

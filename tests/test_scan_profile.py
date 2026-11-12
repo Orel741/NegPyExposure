@@ -178,7 +178,8 @@ def test_brightness_scales_the_scan_gamma():
 def test_brightness_lightens_the_midtones_and_holds_the_ends():
     ramp = np.linspace(0.0, 1.0, 64, dtype=np.float32)
     img = np.ascontiguousarray(np.repeat(ramp[None, :, None], 3, axis=2).repeat(4, axis=0))
-    slopes, pivots, _ = _params(_NEUTRAL_DYES)
+    # Hard prints both tails past the ends, where the knees hold them.
+    slopes, pivots, _ = _params(_NEUTRAL_DYES, tone_profile="hard")
     kw = dict(params_r=(pivots[0], slopes[0]), params_g=(pivots[1], slopes[1]), params_b=(pivots[2], slopes[2]), paper=_NEUTRAL_DYES)
     base = np.asarray(apply_characteristic_curve(img, **kw))
     bright = np.asarray(apply_characteristic_curve(img, brightness=0.5, **kw))
@@ -196,11 +197,17 @@ def test_the_standard_tone_profile_is_the_scan_levels():
     assert _params(SCAN, tone_profile="no such profile") == _params(SCAN)
 
 
-def test_a_linear_tone_profile_prints_the_tails_at_black_and_white():
-    params = _params(SCAN, tone_profile="linear", highlight_point=0.33)
+def test_the_standard_tone_profile_prints_the_tails_at_black_and_white():
+    params = _params(SCAN, tone_profile="standard", highlight_point=0.33)
     d_max = float(effective_constants(SCAN)["d_max"])
     assert _green(params, 0.93) == pytest.approx(d_max)
     assert _green(params, 0.33) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_a_saved_linear_tone_profile_reads_as_standard():
+    from negpy.domain.migrations import migrate_flat_config
+
+    assert migrate_flat_config({"tone_profile": "linear"})["tone_profile"] == "standard"
 
 
 def test_a_hard_tone_profile_is_steeper_than_a_soft_one():

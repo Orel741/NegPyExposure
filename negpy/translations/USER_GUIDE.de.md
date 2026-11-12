@@ -132,18 +132,18 @@ Korrigiert die Farbe des Abzugs, wie die Farbfilter eines Vergrößerers in der 
 *   **Farbstichentfernung**: entfernt einen Farbstich, der in den dunklen und hellen Teilen des Bildes unterschiedlich ist. Der Start liegt bei 0,5 (halb) bei Farbnegativen und bei 0 bei Dias. Blätter, Himmel und Wasser gelten nicht als grau und behalten ihre Farbe.
 *   **Filter**: ein Farbfilter, wie er bei Schwarzweißfilm vor dem Kameraobjektiv sitzt. Er erscheint nur bei einem Farbnegativ oder Farbdia in S/W, und ersetzt die Regler darüber. Jeder Filter dunkelt die Farben ab, die seiner eigenen gegenüberliegen. Gelb #8, Tiefgelb #15, Orange #21 und Rot #25 machen einen blauen Himmel Schritt für Schritt dunkler. Rot macht außerdem Blätter dunkel und Haut blass. Gelbgrün #11 und Grün #58 machen Blätter heller und Haut dunkler. Keiner gibt den Look eines normalen Schwarzweißfilms.
 
-<!-- panel:tone src:d7774fed -->
+<!-- panel:tone src:c50f5a77 -->
 ### 5.2 Tonwerte: Helligkeit und Kontrast
 
 Wie hell oder dunkel das Bild ist und wie viel Kontrast es hat. Jeder Regler beginnt bei 0, und ein Doppelklick setzt ihn zurück.
 
-*   **Tonprofil** (nur beim Papier Digital (Scan)): der Ausgangslook. **Standard** ist die Vorgabe. **Weich** und **Hart** haben weniger und mehr Kontrast. **Linear** schneidet bei Schwarz und Weiß nichts ab. **Flach** hat wenig Kontrast, als Ausgangspunkt für deine eigene Bearbeitung. **Tief** hat dunkle Schatten.
+*   **Tonprofil** (nur beim Papier Digital (Scan)): der Ausgangslook. **Standard** ist die Vorgabe und schneidet bei Schwarz und Weiß nichts ab. **Weich** und **Hart** haben weniger und mehr Kontrast. **Flach** hat wenig Kontrast, als Ausgangspunkt für deine eigene Bearbeitung. **Tief** hat dunkle Schatten.
 *   **Belichtung**: Helligkeit in Blendenstufen (EV). +1 verdoppelt das Licht in den Mitteltönen.
 *   **Helligkeit** (nur beim Papier Digital (Scan)): hellt die Mitteltöne auf oder dunkelt sie ab. Schwarz und Weiß bleiben an ihrem Platz.
 *   **Kontrast**: der Unterschied zwischen dunklen und hellen Tönen. Höher gibt mehr Kontrast.
 *   **Lichter** / **Tiefen**: hellen nur die Lichter oder nur die Schatten auf (positiv) oder dunkeln sie ab (negativ).
 *   **Weiß** / **Schwarz**: verschieben den Weißpunkt oder den Schwarzpunkt. Positives Weiß hellt die hellsten Töne auf. Negatives Schwarz vertieft die dunkelsten Töne.
-*   **Auto** (der Zauberstab, auch in der Leiste des Tabs Belichtung): **Auto-Dichte** und **Auto-Gradation** stellen Helligkeit und Kontrast für jedes Bild ein, damit eine Rolle gleichmäßig abgezogen wird. Die Regler passen dann von den automatischen Werten aus an. Ein Rechtsklick auf den Zauberstab schaltet beide ein oder aus. Das Auto-Menü enthält außerdem:
+*   **Auto** (der Zauberstab, auch in der Leiste des Tabs Belichtung): **Auto-Dichte** und **Auto-Gradation** stellen Helligkeit und Kontrast für jedes Bild ein. Beide sind zuerst aus. Die Regler passen dann von den automatischen Werten aus an. Ein Rechtsklick auf den Zauberstab schaltet beide ein oder aus. Das Auto-Menü enthält außerdem:
     *   **Zielwerte festlegen…**: die Helligkeit und den Kontrast, die Auto anstrebt.
     *   **Auto-Dichte/Gradation fixieren**: behält die automatischen Werte dieses Bildes und schaltet Auto dafür aus.
     *   **Schwarz halten**: Wenn du die Schatten aufhellst, bleiben die tiefsten Schwarztöne schwarz.
