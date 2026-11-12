@@ -9,6 +9,7 @@ from negpy.features.exposure.papers import (
     PaperProfile,
     compose_density_matrices,
     effective_constants,
+    render_shoulder_sharpness,
     resolve_print_color,
     resolve_saturation_matrix,
     scan_gamma,
@@ -128,7 +129,7 @@ class CharacteristicCurve:
         self.bpc_black = 10.0**-db
         wr = float(c["toeshoulder_width_ref"])
         # toe = the shadow (upper) bound, shoulder = the highlight (lower) bound.
-        self.a_hl = float(c["shoulder_sharpness_base"]) * wr / max(shoulder_width, 1e-6)
+        self.a_hl = render_shoulder_sharpness(c) * wr / max(shoulder_width, 1e-6)
         a_sh_base = float(c["toe_sharpness_base"]) * wr / max(toe_width, 1e-6)
         self.d_min_eff = max(0.0, self.d_min + shoulder * ts * float(c["shoulder_height"]))
         toe_eff = toe * ts
@@ -288,6 +289,7 @@ def curve_params_from_metrics(
         levels=(exposure.whites, exposure.blacks),
         tone_profile=exposure.tone_profile,
         exposure_ev=exposure.exposure_ev,
+        auto_exposure=exposure.auto_exposure,
     )
 
 
@@ -486,7 +488,7 @@ def apply_characteristic_curve(
         d_min_rgb=np.array(d_min_rgb, dtype=np.float64),
         d_max=float(c["d_max"]),
         a_toe_base=float(c["toe_sharpness_base"]),
-        a_sh_base=float(c["shoulder_sharpness_base"]),
+        a_sh_base=render_shoulder_sharpness(c),
         width_ref=float(c["toeshoulder_width_ref"]),
         toe_height=float(c["toe_height"]),
         sh_height=float(c["shoulder_height"]),
@@ -1067,14 +1069,16 @@ def per_channel_curve_params(
     levels: Tuple[float, float] = (0.0, 0.0),
     tone_profile: str = "standard",
     exposure_ev: float = 0.0,
+    auto_exposure: bool = True,
 ) -> CurveParams:
     """
     Per-channel (slopes, pivots, curvatures); single source of truth for CPU/GPU/chart.
     Core: v = slope*(u - pivot) + curv*u² (curv 0 = a straight line).
 
-    A scan profile under both Autos places the frame by its levels (scan_levels); Grade and
-    Density then act about that placement, and the tone profile sets the levels and a
-    contrast gain. `levels` is (Whites, Blacks), then Exposure (exposure_shift) is applied last.
+    A scan profile places the frame by its levels (scan_levels): at the metered points under
+    both Autos, at fixed points with both off. Grade and Density then act about that placement,
+    and the tone profile sets the levels and a contrast gain. `levels` is (Whites, Blacks), then
+    Exposure (exposure_shift) is applied last.
     """
     args = (auto_normalize_contrast, strength, lum_range, textural_range, d_min, anchor, paper, neutral_axis_norm)
     params = _paper_curve_params(grade, density, *args, grade_trims, shadow_point, midtone_gamma)
@@ -1082,8 +1086,9 @@ def per_channel_curve_params(
 
     c = effective_constants(paper)
     profile = tone_profile_values(tone_profile)
-    placed = paper is not None and paper.scan and auto_normalize_contrast and anchor is not None
-    if placed and shadow_point is not None and highlight_point is not None:
+    points = scan_level_points(paper, auto_exposure, auto_normalize_contrast, anchor, shadow_point, highlight_point, c)
+    if points is not None:
+        shadow_point, highlight_point = points
         from negpy.features.exposure.models import ExposureConfig
 
         neutral = ExposureConfig()
@@ -1098,6 +1103,26 @@ def per_channel_curve_params(
         turn = float(c["d_max"]) * (1.0 - float(c["scan_contrast_pivot"]))
         params = _rescaled(params, gain, turn * (1.0 - gain)) if gain != 1.0 else params
     return exposure_shift(levels_trim(params, levels[0], levels[1], c), exposure_ev, c)
+
+
+def scan_level_points(
+    paper: Optional[PaperProfile],
+    auto_exposure: bool,
+    auto_normalize_contrast: bool,
+    anchor: Optional[float],
+    shadow_point: Optional[float],
+    highlight_point: Optional[float],
+    c: Dict[str, Any],
+) -> Optional[Tuple[float, float]]:
+    """(shadow, highlight) points a scan profile's levels place, or None where they do not act:
+    the metered points under both Autos, the fixed points with both off."""
+    if paper is None or not paper.scan:
+        return None
+    if not auto_exposure and not auto_normalize_contrast:
+        return float(c["scan_fixed_shadow_point"]), float(c["scan_fixed_highlight_point"])
+    if auto_normalize_contrast and anchor is not None and shadow_point is not None and highlight_point is not None:
+        return float(shadow_point), float(highlight_point)
+    return None
 
 
 def exposure_shift(params: CurveParams, exposure_ev: float, c: Dict[str, Any]) -> CurveParams:

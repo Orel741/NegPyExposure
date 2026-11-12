@@ -92,6 +92,10 @@ class PaperProfile:
     print_color: PrintColor = DyeMatrix(_IDENTITY_DYE)
     lith_path: LithPath = _DEFAULT_LITH_PATH
     scan: bool = False
+    # The shoulder the print curve renders with, when it differs from shoulder_sharpness_base.
+    # The reference tone and Shadow Reach solve on shoulder_sharpness_base, so a soft render
+    # shoulder does not move where Grade reaches its softest.
+    render_shoulder_sharpness: Optional[float] = None
 
 
 PAPER_PROFILES: Dict[str, PaperProfile] = {
@@ -99,8 +103,8 @@ PAPER_PROFILES: Dict[str, PaperProfile] = {
     # Digital's curve with a Pakon minilab's colors: the LUT is RGBScan.icc applied to Digital's print.
     "pakon": PaperProfile(label="Digital (Pakon)", short="Pakon", kind="ra4", medium="digital", print_color=DyeLut("pakon")),
     # A scanner's rendering, not a paper's: the display code is linear in the negative's density.
-    # A soft black knee fades the tail the levels place past black, as a minilab scan does; a hard
-    # shoulder clips the highlight tail. The matrix is a Dye Separation of 1.4, a scanner's color strength.
+    # Soft knees fade the tails the levels place past black and white, as a minilab scan does, so
+    # neither end clips flat. The matrix is a Dye Separation of 1.4, a scanner's color strength.
     "scan": PaperProfile(
         label="Digital (Scan)",
         short="Scan",
@@ -108,6 +112,7 @@ PAPER_PROFILES: Dict[str, PaperProfile] = {
         medium="digital",
         toe_sharpness_base=7.0,
         shoulder_sharpness_base=4.0,
+        render_shoulder_sharpness=2.0,
         print_color=DyeMatrix(((19 / 15, -2 / 15, -2 / 15), (-2 / 15, 19 / 15, -2 / 15), (-2 / 15, -2 / 15, 19 / 15))),
         scan=True,
     ),
@@ -470,4 +475,11 @@ def effective_constants(paper: PaperProfile | None) -> Dict[str, Any]:
     c = dict(EXPOSURE_CONSTANTS)
     for k in _TONAL_KEYS:
         c[k] = getattr(paper, k)
+    if paper.render_shoulder_sharpness is not None:
+        c["render_shoulder_sharpness"] = paper.render_shoulder_sharpness
     return c
+
+
+def render_shoulder_sharpness(c: Dict[str, Any]) -> float:
+    """The shoulder sharpness the print curve renders with, from effective_constants."""
+    return float(c.get("render_shoulder_sharpness", c["shoulder_sharpness_base"]))
