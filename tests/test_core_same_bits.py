@@ -45,6 +45,7 @@ def _filled(fill):
 _LAB = (_IMG3 * np.array([100.0, 160.0, 160.0], np.float32) - np.array([0.0, 80.0, 80.0], np.float32)).astype(np.float32)
 
 _CASES = {
+    "leak_correct": lambda: negpy_core.leak_correct(_IMG3, np.ascontiguousarray(_IMG3[::-1] * np.float32(2.0)), (0.9, 0.8, 0.7), 0.6),
     "chroma_spread": lambda: np.array(negpy_core.chroma_spread(_IMG3, 4, 0.003, 0.97, 0.1)),
     "percentiles": lambda: np.array(negpy_core.percentiles(_IMG1.ravel(), [0.5, 1.0, 37.0, 50.0, 99.0]), np.float32),
     "resize_area_general": lambda: negpy_core.resize_area(_IMG3, (47, 31)),
@@ -173,6 +174,7 @@ _CASES = {
 }
 
 _HASHES = {
+    "leak_correct": "cd2a5f9c891cd6f2f0152915e881c1c869a44707ea0eea26237e7bcde3bbd5bf",
     "chroma_spread": "aae81d8aac0dbd96fc0285f75e75588281672804262ab7aaf65e8e0bc5ec66f3",
     "percentiles": "0874152b6e9f91bd3a3b73e15a9d083d15b6e8c7c6f6a9279d9241df10a88464",
     "resize_area_general": "dbe0fb9e51b0e8bee54cc2bb35756bbf0934077b458c1a44ea27c2e5dd96a16f",

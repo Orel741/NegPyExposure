@@ -73,6 +73,8 @@ REGISTRY: dict[str, ShortcutEntry] = {
     "auto_crop_square": ShortcutEntry("", tr("Toggle Square First"), tr("Geometry")),
     "crop_to_valid": ShortcutEntry("", tr("Toggle Crop Empty Corners"), tr("Geometry")),
     "pick_dust": ShortcutEntry("Shift+D", tr("Toggle heal tool"), tr("Tools")),
+    "leak_frame": ShortcutEntry("", tr("Toggle Measure Leak"), tr("Tools")),
+    "toggle_light_leak": ShortcutEntry("", tr("Toggle Apply Light Leak"), tr("Tools")),
     "pick_scratch": ShortcutEntry("Shift+S", tr("Toggle scratch tool"), tr("Tools")),
     "pick_scratch_line": ShortcutEntry("Shift+K", tr("Toggle transport-scratch line tool"), tr("Tools")),
     "clone_tool": ShortcutEntry("Shift+J", tr("Toggle clone tool"), tr("Tools")),

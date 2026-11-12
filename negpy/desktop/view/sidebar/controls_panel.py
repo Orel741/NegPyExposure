@@ -24,6 +24,7 @@ from negpy.features.process.models import FADE_METER_FIELDS, auto_meter_for_mode
 from negpy.features.process.path import RenderPath, render_path
 from negpy.features.finish.models import FinishConfig
 from negpy.features.flatfield.models import FlatFieldConfig
+from negpy.features.leak.models import LeakConfig
 from negpy.kernel.system.config import DEFAULT_WORKSPACE_CONFIG
 from negpy.services.assets.rolls import ROLL_DEFAULT_FIELDS
 from negpy.desktop.settings_catalog import (
@@ -43,6 +44,7 @@ from negpy.desktop.view.widgets.tab_header import TabHeader
 # Sidebar Components
 from negpy.desktop.view.sidebar.presets import PresetsSidebar
 from negpy.desktop.view.sidebar.flatfield import FlatFieldSidebar
+from negpy.desktop.view.sidebar.leak import LeakSidebar
 from negpy.desktop.view.sidebar.process import ProcessSidebar
 from negpy.desktop.view.sidebar.roll import RollAnalysisSidebar
 from negpy.desktop.view.sidebar.demosaic import DemosaicSidebar
@@ -129,6 +131,7 @@ _DEFAULT_GEOMETRY = DEFAULT_WORKSPACE_CONFIG.geometry
 _DEFAULT_PROCESS = DEFAULT_WORKSPACE_CONFIG.process
 _DEFAULT_FINISH = FinishConfig()
 _DEFAULT_FLATFIELD = FlatFieldConfig()
+_DEFAULT_LEAK = LeakConfig()
 _DEFAULT_CONFIG = DEFAULT_WORKSPACE_CONFIG
 
 _AUTO_METER_FIELDS = ("auto_exposure", "auto_normalize_contrast")
@@ -371,6 +374,14 @@ class ControlsPanel(QWidget):
             icon_name="fa5s.tint",
         )
 
+        self.leak_sidebar = LeakSidebar(self.controller)
+        self.leak_section = self._make_section(
+            tr("Light Leak"),
+            "leak",
+            self.leak_sidebar,
+            icon_name="mdi6.flare",
+        )
+
         self.retouch_sidebar = RetouchSidebar(self.controller)
         self.retouch_section = self._make_section(
             tr("Retouch"),
@@ -423,10 +434,10 @@ class ControlsPanel(QWidget):
             ),
             (
                 "finish",
-                tr("Finish: Retouch, Finishing"),
+                tr("Finish: Retouch, Finishing, Light Leak"),
                 tr("Finish"),
-                [self.retouch_section, self.finish_section],
-                ["retouch_section", "finish_section"],
+                [self.retouch_section, self.finish_section, self.leak_section],
+                ["retouch_section", "finish_section", "leak_section"],
             ),
         ]
 
@@ -566,6 +577,7 @@ class ControlsPanel(QWidget):
         self.process_section.reset_requested.connect(lambda: self._reset_process_fields(_METERING_FIELDS, ("process",)))
         self.baseline_section.reset_requested.connect(lambda: self._reset_process_fields(_BASELINE_FIELDS, ("baseline",)))
         self.retouch_section.reset_requested.connect(lambda: self.controller.session.reset_section("retouch"))
+        self.leak_section.reset_requested.connect(self.controller.clear_leak)
         self.local_section.reset_requested.connect(lambda: self.controller.session.reset_section("local"))
         self.finish_section.reset_requested.connect(lambda: self.controller.session.reset_section("finish"))
         self.film_section.reset_requested.connect(self._reset_film_fields)
@@ -620,6 +632,8 @@ class ControlsPanel(QWidget):
             (self.auto_masking_mirror_btn, "toggle_auto_masking"),
             (self.flatfield_sidebar.enable_btn, "toggle_flat_field"),
             (self.flatfield_sidebar.check_btn, "toggle_flatfield_peek"),
+            (self.leak_sidebar.enable_btn, "toggle_light_leak"),
+            (self.leak_sidebar.frame_btn, "leak_frame"),
             (self.autocrop_sidebar.auto_frame_btn, "auto_crop"),
             (self.autocrop_sidebar.square_btn, "auto_crop_square"),
             (self.autocrop_sidebar.auto_crop_all_btn, "batch_autocrop"),
@@ -1059,6 +1073,7 @@ class ControlsPanel(QWidget):
         self.altproc_sidebar.sync_ui()
         self.toning_sidebar.sync_ui()
         self.retouch_sidebar.sync_ui()
+        self.leak_sidebar.sync_ui()
         self.local_sidebar.sync_ui()
         self.finish_sidebar.sync_ui()
         self.presets_sidebar.sync_ui()
@@ -1395,6 +1410,8 @@ class ControlsPanel(QWidget):
             sum(getattr(proc, f) != getattr(_proc, f) for f in _BASELINE_FIELDS) + (proc.roll_name is not None)
         )
         self.retouch_section.set_modified(retouch_count)
+        leak = cfg.leak
+        self.leak_section.set_modified(sum([bool(leak.leak_points) and leak.leak_apply, leak.leak_strength != _DEFAULT_LEAK.leak_strength]))
         # Presets and the two Scan sections stay out: they own no WorkspaceConfig fields.
         self.sensor_section.set_modified(sensor_count)
         self.fade_section.set_modified(fade_count)

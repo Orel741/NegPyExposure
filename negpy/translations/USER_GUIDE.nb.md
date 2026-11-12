@@ -278,6 +278,17 @@ Hvordan kopien presenteres. De andre glidebryterne for hver effekt vises når de
 *   **Filet negativholder**: **Bredde** tegner en grov svart ramme rundt bildet, slik en negativholder i mørkerommet som er filt bredere, gjør. **Ruhet**, **Lysspredning** (en grå glød utenfor rammen) og **Hjørner** former den.
 *   **Kant**: **Bredde** legger et passepartout rundt kopien. **Vekt nederst** gjør den nedre kanten bredere, som på et passepartout til innramming. **Farge**: **Papirhvitt** tilpasser seg papiret, **Egendefinert** bruker en farge du velger.
 
+<!-- panel:leak src:28f84647 -->
+### 7.3 Lyslekkasje
+
+Fjerner en lyslekkasje: et rødt, oransje eller magenta slør som lys gjennom et kamera eller en kassett legger på filmen. NegPy måler lekkasjen på den klare filmen rundt bildet, der ikke noe bilde skjuler den, og fjerner den fra hele rammen.
+
+*   **Mål lekkasje**: viser hele skanningen med en ramme av punkter. Dra punktene ut på klar film: stripen mellom perforeringen og bildet, og mellomrommet mellom to rammer. Et hjørne flytter punktene på sine to sider med seg. Hold hvert punkt unna perforeringen og kanttrykket. × fjerner rammen og korreksjonen.
+*   **Bruk lyslekkasje** (lyspæren): slår korreksjonen av og på.
+*   **Styrke**: hvor mye av den målte lekkasjen som fjernes. 1 fjerner det som ble målt.
+
+Lekkasjen fjernes som tilført lys, så skyggene mister sløret og høylysene blir som de er. En lekkasje som ikke når kanten av rammen, kan ikke måles.
+
 <!-- panel:presets src:32c2813a -->
 ### Forhåndsinnstillinger
 

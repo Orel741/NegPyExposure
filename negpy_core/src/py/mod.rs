@@ -17,6 +17,7 @@ pub mod hdr;
 pub mod histogram;
 pub mod jpeg;
 pub mod lab;
+pub mod leak;
 pub mod lens;
 pub mod loaders;
 pub mod meter;

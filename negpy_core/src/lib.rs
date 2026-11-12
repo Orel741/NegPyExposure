@@ -20,6 +20,7 @@ pub mod histogram;
 pub mod inpaint;
 pub mod jpeg;
 pub mod lab;
+pub mod leak;
 pub mod lens;
 pub mod loaders;
 pub mod lsd;
@@ -94,6 +95,7 @@ fn negpy_core(m: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> 
     py::warp::register(m)?;
     py::lab::register(m)?;
     py::lens::register(m)?;
+    py::leak::register(m)?;
     py::altprocess::register(m)?;
     py::finish::register(m)?;
     py::flatfield::register(m)?;

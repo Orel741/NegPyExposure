@@ -80,6 +80,8 @@ from negpy.desktop.workers.stitch import StitchTask, StitchWorker
 from negpy.desktop.workers.triplet_probe import TripletProbeWorker
 from negpy.desktop.workers.chart_fit import ChartSource
 from negpy.desktop.workers.frame_merge import FrameMergeTask, FrameMergeWorker
+from negpy.features.leak.logic import default_points as leak_default_points
+from negpy.features.leak.models import LeakConfig
 from negpy.features.hdr.models import ANCHOR_EV_UNSET, hdr_frame_paths, hdr_hash, hdr_name
 from negpy.features.process.capture_color import apply_camera_matrix, camera_to_working_matrix, lightbox_level, wb_only_cam_xyz
 from negpy.features.process.logic import (
@@ -543,6 +545,8 @@ def _stamp_render_serial(last_metrics: Dict[str, Any], metrics: Dict[str, Any]) 
 
 #: A Film Base patch whose log luminance varies more than this across its pixels is not flat film.
 _FILM_BASE_FLAT_DECADES = 0.02
+# Where a new Light Leak frame sits: this far inside the scan's edges, raw-normalized.
+_LEAK_FRAME_INSET = (0.03, 0.04, 0.97, 0.96)
 
 
 def _reverted_tool_config(tool: ToolMode, current: WorkspaceConfig, entry: WorkspaceConfig) -> WorkspaceConfig:
@@ -3594,6 +3598,8 @@ class AppController(QObject):
             self._tool_entry = (mode, self.state.current_file_hash, self.state.config) if mode in REVERTIBLE_TOOLS else None
         self.state.active_tool = mode
         self.state.clone_picking = mode == ToolMode.CLONE and self.state.clone_source is None
+        if mode == ToolMode.LEAK_FRAME:
+            self._ensure_leak_frame()
         self.tool_sync_requested.emit()
         if leaving_zone_place:
             self.clear_zone_pins()
@@ -7051,6 +7057,37 @@ class AppController(QObject):
         from negpy.services.assets.gear import GearProfiles
 
         GearProfiles.save_library(library)
+
+    # ── Light Leak ─────────────────────────────────────────────────────
+
+    def set_leak(self, persist: bool = True, readback_metrics: bool = True, **changes: Any) -> None:
+        """Change the Light Leak settings. The leak moves the frame's densities, so measured bounds go stale."""
+        conf = self.state.config
+        leak = replace(conf.leak, **changes)
+        if not leak.leak_points:
+            leak = replace(leak, leak_apply=False)
+        proc = replace(conf.process, **invalidate_local_bounds(conf.process)) if persist else conf.process
+        self.apply_config(replace(conf, leak=leak, process=proc), persist=persist, readback_metrics=readback_metrics)
+
+    def set_leak_points(self, points: tuple) -> None:
+        """Place the Light Leak measuring frame (raw-normalized points) and turn the correction on."""
+        self.set_leak(leak_points=tuple(points), leak_apply=True)
+
+    def set_leak_enabled(self, enabled: bool) -> None:
+        self.set_leak(leak_apply=bool(enabled))
+
+    def clear_leak(self) -> None:
+        """Remove the measuring frame and the correction."""
+        if self.state.active_tool == ToolMode.LEAK_FRAME:
+            self.set_active_tool(ToolMode.NONE)
+        defaults = LeakConfig()
+        self.set_leak(leak_points=defaults.leak_points, leak_apply=defaults.leak_apply, leak_strength=defaults.leak_strength)
+        self.tool_sync_requested.emit()
+
+    def _ensure_leak_frame(self) -> None:
+        """A first Measure Leak places a frame just inside the scan's edges, turned on."""
+        if not self.state.config.leak.leak_points:
+            self.set_leak(leak_points=leak_default_points(_LEAK_FRAME_INSET), leak_apply=True)
 
     def set_flatfield_enabled(self, enabled: bool) -> None:
         """

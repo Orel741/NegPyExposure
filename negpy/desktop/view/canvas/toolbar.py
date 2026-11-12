@@ -243,6 +243,7 @@ _TOOL_ROWS: dict[ToolMode, tuple[str, str, str]] = {
     ToolMode.FILM_BASE: (tr("Film Base"), tr("Click the clear rebate to set the roll's film base"), ""),
     ToolMode.DMIN_PICK: (tr("Dmin"), tr("Click the thinnest spot of the negative: the film base or the deepest shadow"), ""),
     ToolMode.DMAX_PICK: (tr("Dmax"), tr("Click the densest spot of the negative: the brightest highlight"), ""),
+    ToolMode.LEAK_FRAME: (tr("Measure Leak"), tr("Drag the points onto clear film around the picture; a corner moves its sides"), ""),
     ToolMode.STRAIGHTEN: (tr("Level"), tr("Draw a line along a horizon or an edge to level the frame"), _FINE_ROTATION),
     ToolMode.KEYSTONE_LINES: (
         tr("Keystone Lines"),
@@ -278,6 +279,8 @@ _CANVAS_TOOLS: tuple[tuple[ToolMode, str, str] | str, ...] = (
     (ToolMode.SCRATCH_PICK, "pick_scratch", "controls_panel.retouch_sidebar.pick_scratch_btn"),
     (ToolMode.SCRATCH_LINE, "pick_scratch_line", "controls_panel.retouch_sidebar.pick_line_btn"),
     (ToolMode.CLONE, "clone_tool", "controls_panel.retouch_sidebar.clone_btn"),
+    tr("Light Leak"),
+    (ToolMode.LEAK_FRAME, "leak_frame", "controls_panel.leak_sidebar.frame_btn"),
 )
 _TOOL_BUTTON_PATHS = {spec[0]: spec[2] for spec in _CANVAS_TOOLS if not isinstance(spec, str)}
 

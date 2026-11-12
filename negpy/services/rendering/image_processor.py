@@ -40,6 +40,7 @@ from negpy.features.process.sensor import apply_sensor_correction, effective_sen
 from negpy.features.exposure.analysis import COLOR_HIST_BINS
 from negpy.features.exposure.models import RenderIntent
 from negpy.features.flatfield.logic import apply_flatfield, flatfield_token
+from negpy.features.leak.logic import apply_leak, leak_token
 from negpy.features.lab.logic import apply_resize_sharpening
 from negpy.services.rendering.lens import flatfield_source, lens_decode_token, metadata_lens_corrections, prepare_lens_source
 from negpy.features.geometry.logic import autocrop_detection_key, meter_detection_key, resolve_autocrop_rect, resolve_meter_rect
@@ -369,6 +370,7 @@ def precorrect_key(
         source_orientation,
         metadata_lens_corrections(settings),
         flatfield_token(settings.flatfield),
+        leak_token(settings.leak),
         sensor_token(settings.process),
         rgbscan_token(settings.rgbscan),
         stitch_token(settings.stitch),
@@ -377,11 +379,11 @@ def precorrect_key(
 
 
 def precorrect_source(img: ImageBuffer, settings: WorkspaceConfig, gain_slices: tuple = (), source_orientation: int = 1) -> ImageBuffer:
-    """Flat-field, then the sensor unmix: the source pre-corrections, before geometry and crop."""
+    """Flat-field, the sensor unmix, then the light leak: the source pre-corrections, before geometry and crop."""
     img = flatfield_source(img, settings, gain_slices, orientation=source_orientation)
     if preview_takes_unmix(settings):
         img = apply_sensor_correction(img, effective_sensor_matrix(settings.process), settings.process.sensor_unmix)
-    return img
+    return apply_leak(img, settings.leak)
 
 
 def read_source_base(img: ImageBuffer, settings: WorkspaceConfig, source_hash: str, source_orientation: int = 1) -> Optional[tuple]:
@@ -392,12 +394,14 @@ def read_source_base(img: ImageBuffer, settings: WorkspaceConfig, source_hash: s
 
 
 def _unmix_source(f32_buffer: np.ndarray, params: WorkspaceConfig) -> np.ndarray:
-    """The unmix `_load_source_f32(unmix=False)` left out, on the whole source or on one half,
-    as the preview unmixes a half alone. Triplets are never unmixed; a stitch holding one
+    """The unmix and light leak `_load_source_f32(unmix=False)` left out, on the whole source or on
+    one half, as the preview corrects a half alone. Triplets are never unmixed; a stitch holding one
     unmixes its other parts alone."""
     if (is_rgb_triplet(params.rgbscan) and not hdr_active(params.hdr)) or stitch_has_triplets(params.stitch):
-        return f32_buffer
-    return apply_sensor_correction(f32_buffer, effective_sensor_matrix(params.process), params.process.sensor_unmix)
+        return apply_leak(f32_buffer, params.leak)
+    return apply_leak(
+        apply_sensor_correction(f32_buffer, effective_sensor_matrix(params.process), params.process.sensor_unmix), params.leak
+    )
 
 
 def _part_params(params: WorkspaceConfig, index: int) -> WorkspaceConfig:
@@ -826,6 +830,7 @@ class ImageProcessor:
         base_hash = (
             source_hash
             + flatfield_token(settings.flatfield)
+            + leak_token(settings.leak)
             + lens_decode_token(metadata_lens_corrections(settings), settings.flatfield)
             + rgbscan_token(settings.rgbscan)
             + stitch_token(settings.stitch)
@@ -1126,6 +1131,7 @@ class ImageProcessor:
             stitch_token(params.stitch),
             hdr_token(params.hdr),
             flatfield_token(params.flatfield),
+            leak_token(params.leak),
             sensor_token(params.process),
             demosaic_token(params.process.demosaic_export),
             fast_decode,
@@ -1154,9 +1160,12 @@ class ImageProcessor:
             f32_buffer, ir_full = stitch_composite(parts, irs, params.stitch)
             if whole and unmix:
                 f32_buffer = _unmix_source(f32_buffer, params)
+            elif unmix:
+                f32_buffer = apply_leak(f32_buffer, params.leak)
             result = (f32_buffer, ir_full, source_cs)
         else:
-            result = self._decode_oriented_f32(file_path, params, fast_decode, unmix=unmix)
+            f32_buffer, ir_full, source_cs = self._decode_oriented_f32(file_path, params, fast_decode, unmix=unmix)
+            result = (apply_leak(f32_buffer, params.leak) if unmix else f32_buffer, ir_full, source_cs)
 
         self._source_cache_key = cache_key
         self._source_cache_value = result
@@ -1406,6 +1415,7 @@ class ImageProcessor:
         detect_key = (
             source_hash
             + flatfield_token(params.flatfield)
+            + leak_token(params.leak)
             + lens_decode_token(metadata_lens_corrections(params), params.flatfield)
             + rgbscan_token(params.rgbscan)
             + stitch_token(params.stitch)
@@ -2033,6 +2043,7 @@ class ImageProcessor:
             detect_key = (
                 source_hash
                 + flatfield_token(params.flatfield)
+                + leak_token(params.leak)
                 + lens_decode_token(metadata_lens_corrections(params), params.flatfield)
                 + rgbscan_token(params.rgbscan)
                 + stitch_token(params.stitch)

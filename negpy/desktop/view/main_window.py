@@ -703,6 +703,7 @@ class MainWindow(QMainWindow):
         self.canvas.keystone_line_marked.connect(self.controller.handle_keystone_line_marked)
         self.controller.keystone_lines_cleared.connect(self.canvas.clear_keystone_lines)
         self.canvas.zone_pin_moved.connect(self.controller.move_zone_pin)
+        self.canvas.leak_points_changed.connect(self.controller.set_leak_points)
         self.canvas.zone_placement_confirmed.connect(self.controller.apply_zone_placement)
         self.canvas.local_mask_selected.connect(self.controller.select_local_mask)
         self.canvas.local_mask_edited.connect(self.controller.handle_local_mask_edited)
