@@ -1521,6 +1521,7 @@ class DesktopSessionManager(QObject):
         no roll has no roll baseline to average, so an average it does not already ride is off.
         """
         roll_id = rolls.frame_roll(self.repo, self.state.active_roll_id, asset)
+        config = rolls.resolve_roll_dmin(self.repo, roll_id, config)
         if roll_id is None:
             return self._without_unbaselined_averages(config)
         if fresh and (seed := rolls.frame_seed(self.repo, roll_id)):

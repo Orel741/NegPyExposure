@@ -390,7 +390,7 @@ Gibt einem ausgeblichenen Dia seine Farbstoffschichten zurück. Die Karte ersche
 *   **Graumischung**: ändert, welchen Grautönen Schätzen vertraut. Ziehe den Regler, wenn die Farben nicht stimmen.
 *   **Crossover**: entfernt eine Farbverschiebung zwischen Schatten und Lichtern. Stelle ihn an einem Bild mit klaren Grautönen ein und klicke dann auf der Karte auf **Rolle**.
 
-<!-- panel:process src:60925755 -->
+<!-- panel:process src:2778ea07 -->
 ### 10.6 Messung: Negativ → Positiv
 
 Um ein Negativ in ein Positiv umzuwandeln, misst NegPy die dunkelsten und hellsten Stellen (Schwarz- und Weißpunkt) und die Farbe des Films. Diese Regler bestimmen, was NegPy misst.
@@ -402,7 +402,7 @@ Um ein Negativ in ein Positiv umzuwandeln, misst NegPy die dunkelsten und hellst
 *   **Grenzen sperren**: behält Schwarz- und Weißpunkt dieses Bildes, auch wenn sich der Zuschnitt oder die Rollenanalyse ändert.
 *   **Luma-Bereichsbeschnitt** (Klappbereich): wie eng Schwarz und Weiß gesetzt werden. Positive Werte geben mehr Kontrast, für dichte oder verschleierte Negative. Negative Werte erhalten mehr Details in Schatten und Lichtern.
 *   **Farbbeschnitt** (Klappbereich): wie eng die Farbbalance gesetzt wird.
-*   **Dmin** / **Dmax** (Klappbereich Von Hand wählen): für ein Bild, das NegPy schlecht misst. Klicke **Dmin**, dann die Filmbasis oder den tiefsten Schatten, um den Schwarzpunkt zu setzen. Klicke **Dmax**, dann das hellste Licht, um den Weißpunkt zu setzen. Jedes **×** löscht seinen eigenen Punkt. Beide sind aus, solange das Bild auf dem Rollenmittelwert druckt.
+*   **Dmin** / **Dmax** (Klappbereich Von Hand wählen): setzen Schwarz- und Weißpunkt von Hand. Klicke **Dmin**, dann die klare Filmbasis, um Schwarzpunkt und Farbbalance der ganzen geöffneten Rolle zu setzen. Ein Umschalt-Klick setzt ihn nur für dieses Bild. Dmin hat Vorrang vor dem Rollenmittelwert. Klicke **Dmax**, dann das hellste Licht, um den Weißpunkt dieses Bildes zu setzen. Jedes **×** löscht seinen eigenen Punkt.
 *   **Weißpunkt** / **Schwarzpunkt** (Klappbereich): verschieben den gemessenen Weiß- und Schwarzpunkt. Ein positiver Weißpunkt hellt den Abzug auf. Ein positiver Schwarzpunkt hebt die Schwarztöne an. **R / G / B** verschiebt nur eine Farbe.
 
 Ein **Dia** braucht keine Umkehrung: Die Tonwertregler formen das Bild direkt. Auto-Dichte und Auto-Gradation sind aus. Schalte sie für ein verblasstes Dia ein. Auf einem Dia legt Bereich zeichnen die Fläche fest, die Schätzen, Schleier entfernen, Farbstichentfernung, Auto-Dichte und Auto-Gradation messen. Zeichne ihn, bevor du auf Schätzen klickst.

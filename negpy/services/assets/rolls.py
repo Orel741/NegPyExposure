@@ -1092,6 +1092,32 @@ def set_roll_film_base(repo: Any, roll_id: str, base_log: Optional[tuple]) -> bo
     return True
 
 
+def roll_dmin(repo: Any, roll_id: Optional[str]) -> Optional[tuple]:
+    """The Dmin picked for the whole roll, in the bounds' unmixed log space, or None."""
+    entry = roll_for_id(repo, roll_id) if roll_id else None
+    saved = entry.get("dmin") if entry else None
+    return tuple(float(v) for v in saved) if saved else None
+
+
+def set_roll_dmin(repo: Any, roll_id: str, dmin: Optional[tuple]) -> bool:
+    """Records the roll's picked Dmin; None clears it. False for an unknown roll id."""
+    store = _read(repo)
+    entry = store.get(roll_id)
+    if entry is None:
+        return False
+    entry["dmin"] = None if dmin is None else [float(v) for v in dmin]
+    _write(repo, store)
+    return True
+
+
+def resolve_roll_dmin(repo: Any, roll_id: Optional[str], config: "WorkspaceConfig") -> "WorkspaceConfig":
+    """*config* carrying its roll's picked Dmin, or none outside a roll or before a pick."""
+    dmin = roll_dmin(repo, roll_id)
+    if dmin == config.process.roll_dmin:
+        return config
+    return replace(config, process=replace(config.process, roll_dmin=dmin))
+
+
 def roll_scenes(repo: Any, roll_id: Optional[str]) -> List[tuple]:
     """The roll's scenes as ``(scene_id, entry)`` pairs, in creation order: a scene's
     ordinal is its 1-based position here."""

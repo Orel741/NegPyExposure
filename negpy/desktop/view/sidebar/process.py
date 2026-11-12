@@ -97,12 +97,12 @@ def _color_value_to_slider(v: float) -> float:
     return -100.0 * (lv - ln) / (math.log10(_COLOR_CLIP_MIN) - ln)
 
 
-def _picked_densities(picked: tuple | None) -> str:
+def _picked_densities(picked: tuple | None, roll: bool = False) -> str:
     """A picked end as per-channel density (minus log10 transmittance), or Auto."""
     if picked is None:
         return tr("Auto")
     values = channel_markup([f"{name} {-v:.2f}" for name, v in zip("RGB", picked)])
-    return tr("Picked: {values}", values=values)
+    return tr("Roll: {values}", values=values) if roll else tr("Picked: {values}", values=values)
 
 
 class ProcessSidebar(BaseSidebar):
@@ -220,8 +220,8 @@ class ProcessSidebar(BaseSidebar):
         self.dmin_btn = clearable_tool_toggle(
             "mdi6.circle-outline",
             tr("Dmin: Thinnest Spot"),
-            tr("Dmin: click the film base or the deepest shadow to set this frame's black point by hand."),
-            tr("Clear Dmin: measure the black point automatically again."),
+            tr("Dmin: click the film base to set the black point of the whole roll; Shift-click sets it for this frame only."),
+            tr("Clear Dmin: forget this frame's Dmin, else the roll's, and measure the black point again."),
         )
         self.dmax_btn = clearable_tool_toggle(
             "mdi6.circle",
@@ -536,18 +536,21 @@ class ProcessSidebar(BaseSidebar):
             has_region = conf.analysis_rect is not None
             self.analysis_region_btn.setChecked(self.state.active_tool == ToolMode.ANALYSIS_DRAW)
             self.clear_analysis_region_btn.setVisible(has_region)
-            # Both axes on the roll average leave nothing for a hand pick to move.
+            # Both axes on the roll average leave nothing for a hand-picked Dmax to move; Dmin wins over them.
             rides = conf.use_luma_average and conf.use_color_average
-            for btn, hint, mode, picked in (
-                (self.dmin_btn, self.dmin_hint, ToolMode.DMIN_PICK, conf.manual_dmin),
-                (self.dmax_btn, self.dmax_hint, ToolMode.DMAX_PICK, conf.manual_dmax),
+            roll_dmin = self.controller.roll_dmin() if conf.manual_dmin is None else None
+            for btn, hint, mode, picked, enabled in (
+                (self.dmin_btn, self.dmin_hint, ToolMode.DMIN_PICK, conf.manual_dmin or roll_dmin, True),
+                (self.dmax_btn, self.dmax_hint, ToolMode.DMAX_PICK, conf.manual_dmax, not rides),
             ):
                 btn.setChecked(self.state.active_tool == mode)
-                btn.setEnabled(not rides)
+                btn.setEnabled(enabled)
                 btn.clear_btn.setVisible(picked is not None)
                 hint.setText(_picked_densities(picked))
+            if roll_dmin is not None:
+                self.dmin_hint.setText(_picked_densities(roll_dmin, roll=True))
             if rides:
-                self.dmin_hint.setText(tr("Off while this frame prints on the roll average: turn off Luma and Color to pick by hand."))
+                self.dmax_hint.setText(tr("Off while this frame prints on the roll average: turn off Luma and Color to pick by hand."))
 
             # Draw Region stays: the slide meters, Estimate and Remove Stain read it too.
             for w in (
