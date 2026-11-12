@@ -63,7 +63,7 @@ from negpy.features.exposure.analysis import (
 from negpy.features.exposure.bw_filter import printed_exposure
 from negpy.features.exposure.densitometer import zone_roman
 from negpy.features.exposure.papers import profiles_for_mode
-from negpy.features.leak.logic import corner_indices
+from negpy.features.leak.logic import anchored_frame, corner_indices
 from negpy.features.geometry.logic import (
     compute_geometry_crop_rect,
     rotation_drag_angle,
@@ -439,7 +439,7 @@ class CanvasOverlay(QWidget):
     zoom_toggle_requested = pyqtSignal(QPointF)  # double-click with no tool armed
     zone_shares_changed = pyqtSignal(object)  # each zone's share of a newly measured frame
     zone_pointer_changed = pyqtSignal(object)  # zone under the pointer, or None
-    leak_points_changed = pyqtSignal(object)  # Light Leak frame points, raw-normalized
+    leak_frame_changed = pyqtSignal(object)  # Light Leak frame points, in the crop's space
 
     def __init__(self, state: AppState, parent=None):
         super().__init__(parent)
@@ -2857,16 +2857,13 @@ class CanvasOverlay(QWidget):
             return
         _draw_dashed_frame(painter, rect.intersected(self._view_rect))
 
-    def _leak_uv_grid(self) -> Optional[np.ndarray]:
-        with self.state.metrics_lock:
-            return self.state.last_metrics.get("uv_grid")
-
     def _leak_screen_points(self) -> List[QPointF]:
-        points = self._leak_working if self._leak_working is not None else self.state.config.leak.leak_points
-        uv_grid = self._leak_uv_grid()
-        if not points or uv_grid is None:
+        """The frame on screen. Measure Leak shows the uncropped straightened image, the crop's space."""
+        if self._view_rect.isEmpty():
             return []
-        return [self._raw_to_screen(rx, ry, uv_grid) for rx, ry in points]
+        conf = self.state.config
+        points = self._leak_working if self._leak_working is not None else anchored_frame(conf.leak, conf.geometry.crop_rect)
+        return [self._norm_to_screen(x, y) for x, y in points]
 
     def _hit_leak_point(self, pos: QPointF) -> Optional[int]:
         best, best_d = None, _CROP_HANDLE_PX * _CROP_HANDLE_PX
@@ -2879,12 +2876,9 @@ class CanvasOverlay(QWidget):
     def _drag_leak_point(self, pos: QPointF) -> None:
         """Move the grabbed point. A corner carries the points of its two sides along, each by
         how near it lies to the corner, so the sides keep their shape."""
-        uv_grid = self._leak_uv_grid()
-        norm = self._map_to_image_coords_unbounded(pos)
-        if uv_grid is None or norm is None or self._leak_working is None or self._leak_drag is None:
+        if self._view_rect.isEmpty() or self._leak_working is None or self._leak_drag is None:
             return
-        rx, ry = CoordinateMapping.map_click_to_raw(norm[0], norm[1], uv_grid)
-        rx, ry = float(np.clip(rx, 0.0, 1.0)), float(np.clip(ry, 0.0, 1.0))
+        rx, ry = self._screen_to_norm(pos)
         pts = self._leak_working
         i = self._leak_drag
         dx, dy = rx - pts[i][0], ry - pts[i][1]
@@ -3351,7 +3345,8 @@ class CanvasOverlay(QWidget):
             hit = self._hit_leak_point(event.position())
             if hit is not None:
                 self._leak_drag = hit
-                self._leak_working = list(self.state.config.leak.leak_points)
+                conf = self.state.config
+                self._leak_working = list(anchored_frame(conf.leak, conf.geometry.crop_rect))
                 self.setCursor(Qt.CursorShape.ClosedHandCursor)
                 self._begin_auto_pan(event.position())
             event.accept()
@@ -3994,8 +3989,9 @@ class CanvasOverlay(QWidget):
             self._leak_drag = None
             self._leak_working = None
             self._stop_auto_pan()
-            if points is not None and tuple(points) != self.state.config.leak.leak_points:
-                self.leak_points_changed.emit(tuple(points))
+            conf = self.state.config
+            if points is not None and tuple(points) != anchored_frame(conf.leak, conf.geometry.crop_rect):
+                self.leak_frame_changed.emit(tuple(points))
             self.setCursor(Qt.CursorShape.OpenHandCursor)
             self.update()
             event.accept()

@@ -72,6 +72,9 @@ DROPPED_KEYS: frozenset[str] = frozenset(
         # Optical-removal exclusions became strokes (dust_exclusion_strokes); the loose
         # patch list they replaced cannot be unpacked as one.
         "dust_exclusions",
+        # The Light Leak frame moved from raw-image points to the crop's space (leak_frame), which
+        # needs the scan's shape to convert. The frame is placed again.
+        "leak_points",
         # The Contrast Mask's blur scale (spacer); the tone mask's blur is fixed.
         "mask_blur",
         "mask_spacer",

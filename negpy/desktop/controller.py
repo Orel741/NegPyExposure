@@ -545,8 +545,10 @@ def _stamp_render_serial(last_metrics: Dict[str, Any], metrics: Dict[str, Any]) 
 
 #: A Film Base patch whose log luminance varies more than this across its pixels is not flat film.
 _FILM_BASE_FLAT_DECADES = 0.02
-# Where a new Light Leak frame sits: this far inside the scan's edges, raw-normalized.
+# Where a new Light Leak frame sits with no crop: this far inside the scan's edges.
 _LEAK_FRAME_INSET = (0.03, 0.04, 0.97, 0.96)
+# A first frame on a cropped frame sits this fraction of the crop's size inside it.
+_LEAK_FRAME_MARGIN = 0.015
 
 
 def _reverted_tool_config(tool: ToolMode, current: WorkspaceConfig, entry: WorkspaceConfig) -> WorkspaceConfig:
@@ -7064,14 +7066,16 @@ class AppController(QObject):
         """Change the Light Leak settings. The leak moves the frame's densities, so measured bounds go stale."""
         conf = self.state.config
         leak = replace(conf.leak, **changes)
-        if not leak.leak_points:
+        if not leak.leak_frame:
             leak = replace(leak, leak_apply=False)
         proc = replace(conf.process, **invalidate_local_bounds(conf.process)) if persist else conf.process
         self.apply_config(replace(conf, leak=leak, process=proc), persist=persist, readback_metrics=readback_metrics)
 
-    def set_leak_points(self, points: tuple) -> None:
-        """Place the Light Leak measuring frame (raw-normalized points) and turn the correction on."""
-        self.set_leak(leak_points=tuple(points), leak_apply=True)
+    def set_leak_frame(self, points: tuple) -> None:
+        """Place the Light Leak measuring frame (points in the crop's space), anchored to this frame's
+        crop. Moving the frame leaves the correction on or off as it was."""
+        crop = self.state.config.geometry.crop_rect
+        self.set_leak(leak_frame=tuple(points), leak_anchor=tuple(crop) if crop else ())
 
     def set_leak_enabled(self, enabled: bool) -> None:
         self.set_leak(leak_apply=bool(enabled))
@@ -7081,13 +7085,28 @@ class AppController(QObject):
         if self.state.active_tool == ToolMode.LEAK_FRAME:
             self.set_active_tool(ToolMode.NONE)
         defaults = LeakConfig()
-        self.set_leak(leak_points=defaults.leak_points, leak_apply=defaults.leak_apply, leak_strength=defaults.leak_strength)
+        self.set_leak(
+            leak_frame=defaults.leak_frame,
+            leak_anchor=defaults.leak_anchor,
+            leak_apply=defaults.leak_apply,
+            leak_strength=defaults.leak_strength,
+        )
         self.tool_sync_requested.emit()
 
     def _ensure_leak_frame(self) -> None:
-        """A first Measure Leak places a frame just inside the scan's edges, turned on."""
-        if not self.state.config.leak.leak_points:
-            self.set_leak(leak_points=leak_default_points(_LEAK_FRAME_INSET), leak_apply=True)
+        """A first Measure Leak places a frame just inside the crop, or just inside the scan's edges
+        with no crop. The correction stays off until the user turns it on, because a guessed frame
+        can sit on the picture or on bare light."""
+        if self.state.config.leak.leak_frame:
+            return
+        crop = self.state.config.geometry.crop_rect
+        if crop:
+            x1, y1, x2, y2 = crop
+            mx, my = (x2 - x1) * _LEAK_FRAME_MARGIN, (y2 - y1) * _LEAK_FRAME_MARGIN
+            rect = (x1 + mx, y1 + my, x2 - mx, y2 - my)
+        else:
+            rect = _LEAK_FRAME_INSET
+        self.set_leak(leak_frame=leak_default_points(rect), leak_anchor=tuple(crop) if crop else ())
 
     def set_flatfield_enabled(self, enabled: bool) -> None:
         """
