@@ -199,6 +199,9 @@ class ProcessConfig:
     # analyzed thin end (ceils), Dmax the dense end (floors). None keeps that end auto.
     manual_dmin: Optional[tuple] = None
     manual_dmax: Optional[tuple] = None
+    # The roll's Dmin, picked on any of its frames and stored with the roll (rolls.roll_dmin);
+    # same space as manual_dmin, which wins over it. Unlike manual_dmin it also overrides a roll average.
+    roll_dmin: Optional[tuple] = None
     # Where each end was picked, content-normalized in the uncropped pick-tool view; only the canvas marks read it.
     manual_dmin_at: Optional[tuple] = None
     manual_dmax_at: Optional[tuple] = None
@@ -319,7 +322,7 @@ class ProcessConfig:
             object.__setattr__(self, "meter_rect", tuple(self.meter_rect))
         if self.film_base is not None:
             object.__setattr__(self, "film_base", tuple(float(v) for v in self.film_base))
-        for name in ("manual_dmin", "manual_dmax", "manual_dmin_at", "manual_dmax_at"):
+        for name in ("manual_dmin", "manual_dmax", "roll_dmin", "manual_dmin_at", "manual_dmax_at"):
             if getattr(self, name) is not None:
                 object.__setattr__(self, name, tuple(float(v) for v in getattr(self, name)))
 

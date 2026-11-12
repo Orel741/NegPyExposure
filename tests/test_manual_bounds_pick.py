@@ -33,17 +33,31 @@ def test_a_picked_end_replaces_that_end_of_the_analysis(picks, expected):
     assert final == expected
 
 
-def test_roll_average_on_both_axes_wins_over_picks():
-    locked = LogNegativeBounds((-1.5, -1.5, -1.5), (-0.2, -0.2, -0.2))
-    final, _ = _resolve(
-        manual_dmin=_DMIN,
-        manual_dmax=_DMAX,
-        use_luma_average=True,
-        use_color_average=True,
-        locked_floors=locked.floors,
-        locked_ceils=locked.ceils,
-    )
-    assert final == _t(locked)
+_LOCKED = LogNegativeBounds((-1.5, -1.5, -1.5), (-0.2, -0.2, -0.2))
+_ON_ROLL_AVERAGE = dict(use_luma_average=True, use_color_average=True, locked_floors=_LOCKED.floors, locked_ceils=_LOCKED.ceils)
+
+
+def test_a_picked_dmin_wins_over_the_roll_average_and_dmax_does_not():
+    final, base = _resolve(manual_dmin=_DMIN, manual_dmax=_DMAX, **_ON_ROLL_AVERAGE)
+    assert final == (_LOCKED.floors, _DMIN)
+    assert base == _t(_LOCKED)
+
+
+@pytest.mark.parametrize("averages", [{}, _ON_ROLL_AVERAGE, dict(_ON_ROLL_AVERAGE, use_luma_average=False)])
+def test_the_roll_dmin_sets_the_thin_end_and_stays_out_of_the_persisted_base(averages):
+    from negpy.features.exposure.normalization import luma_source_bounds
+
+    process = ProcessConfig(roll_dmin=_DMIN, **averages)
+    final, base = resolve_bounds_detailed(process, lambda: _AUTO)
+    assert tuple(final.ceils) == _DMIN
+    assert tuple(base.ceils) != _DMIN
+    assert tuple(luma_source_bounds(process, base).ceils) == _DMIN
+
+
+def test_the_frames_own_dmin_wins_over_the_rolls():
+    own = (-0.15, -0.25, -0.55)
+    final, _ = _resolve(manual_dmin=own, roll_dmin=_DMIN)
+    assert final[1] == own
 
 
 def _controller():
@@ -84,6 +98,42 @@ def test_each_tool_sets_its_own_end_and_disarms():
     _click(ctrl, "manual_dmin", (0.9, 0.8, 0.7))
     assert ctrl.state.config.process.manual_dmin == pytest.approx((-0.1, -0.2, -0.3))
     assert ctrl.state.config.process.manual_dmin_at == (0.5, 0.5)
+
+
+def test_a_pick_in_an_open_roll_sets_the_rolls_dmin_and_shift_sets_the_frames(monkeypatch):
+    from unittest.mock import MagicMock
+
+    from PyQt6.QtCore import Qt
+
+    from negpy.desktop import controller as controller_module
+
+    ctrl = _controller()
+    ctrl.state.active_roll_id = "roll-1"
+    ctrl.state.uploaded_files = [{"hash": "a"}, {"hash": "b"}]
+    ctrl.state.current_file_hash = "a"
+    ctrl.refresh_thumbnails_for = MagicMock()
+    ctrl.session = MagicMock()
+    stored = {}
+    monkeypatch.setattr(controller_module.rolls, "set_roll_dmin", lambda _repo, _rid, v: stored.update(dmin=v) or True)
+    monkeypatch.setattr(controller_module.rolls, "roll_dmin", lambda _repo, _rid: stored.get("dmin"))
+    modifiers = MagicMock(return_value=Qt.KeyboardModifier.NoModifier)
+    monkeypatch.setattr(controller_module.QApplication, "keyboardModifiers", modifiers)
+
+    _click(ctrl, "manual_dmin", (0.9, 0.8, 0.7))
+    proc = ctrl.state.config.process
+    assert stored["dmin"] == pytest.approx((-0.1, -0.2, -0.3))
+    assert proc.roll_dmin == stored["dmin"] and proc.manual_dmin is None
+    ctrl.refresh_thumbnails_for.assert_called_once_with(["b"])
+
+    modifiers.return_value = Qt.KeyboardModifier.ShiftModifier
+    _click(ctrl, "manual_dmin", (0.5, 0.5, 0.5))
+    assert ctrl.state.config.process.manual_dmin == pytest.approx((-0.5, -0.5, -0.5))
+    assert stored["dmin"] == pytest.approx((-0.1, -0.2, -0.3))
+
+    ctrl.clear_bounds_pick("manual_dmin")
+    assert ctrl.state.config.process.manual_dmin is None and stored["dmin"] is not None
+    ctrl.clear_bounds_pick("manual_dmin")
+    assert stored["dmin"] is None and ctrl.state.config.process.roll_dmin is None
 
 
 def test_clear_forgets_only_its_own_end():

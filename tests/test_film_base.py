@@ -57,6 +57,20 @@ def test_the_roll_keeps_the_base_it_was_given():
     assert rolls.set_roll_film_base(repo, "no-such-roll", (0.0, 0.0, 0.0)) is False
 
 
+def test_the_roll_keeps_its_dmin_and_hands_it_to_its_frames():
+    from negpy.domain.models import WorkspaceConfig
+
+    repo, roll_id = _repo_with_roll()
+    config = WorkspaceConfig()
+    assert rolls.resolve_roll_dmin(repo, roll_id, config) is config
+    assert rolls.set_roll_dmin(repo, roll_id, (-0.1, -0.2, -0.6)) is True
+    assert rolls.roll_dmin(repo, roll_id) == (-0.1, -0.2, -0.6)
+    assert rolls.resolve_roll_dmin(repo, roll_id, config).process.roll_dmin == (-0.1, -0.2, -0.6)
+    picked = rolls.resolve_roll_dmin(repo, roll_id, config)
+    assert rolls.resolve_roll_dmin(repo, None, picked).process.roll_dmin is None
+    assert rolls.set_roll_dmin(repo, "no-such-roll", None) is False
+
+
 def test_a_picked_base_round_trips_through_the_crosstalk_unmix():
     """The tool stores M⁻¹·picked; a render unmixes it back to what was clicked."""
     from negpy.features.exposure.normalization import unmix_log_image
