@@ -63,7 +63,7 @@ from negpy.features.exposure.analysis import (
 from negpy.features.exposure.bw_filter import printed_exposure
 from negpy.features.exposure.densitometer import zone_roman
 from negpy.features.exposure.papers import profiles_for_mode
-from negpy.features.leak.logic import anchored_frame, corner_indices
+from negpy.features.leak.logic import anchored_frame, corner_indices, idle_points, sides, used_sides
 from negpy.features.geometry.logic import (
     compute_geometry_crop_rect,
     rotation_drag_angle,
@@ -2867,7 +2867,11 @@ class CanvasOverlay(QWidget):
 
     def _hit_leak_point(self, pos: QPointF) -> Optional[int]:
         best, best_d = None, _CROP_HANDLE_PX * _CROP_HANDLE_PX
-        for i, p in enumerate(self._leak_screen_points()):
+        pts = self._leak_screen_points()
+        idle = idle_points(len(pts), self.state.config.leak.leak_sides)
+        for i, p in enumerate(pts):
+            if i in idle:
+                continue
             d = (pos.x() - p.x()) ** 2 + (pos.y() - p.y()) ** 2
             if d <= best_d:
                 best, best_d = i, d
@@ -2894,24 +2898,30 @@ class CanvasOverlay(QWidget):
         self.update()
 
     def _draw_leak_frame(self, painter: QPainter) -> None:
-        """The Light Leak measuring frame: a closed line through its points, corners square."""
+        """The Light Leak measuring frame: a closed line through its points, corners square. A side
+        that does not read the leak (Sides) shows faint, with no points to drag."""
         pts = self._leak_screen_points()
         if len(pts) < 4:
             return
         corners = set(corner_indices(len(pts)))
+        mode = self.state.config.leak.leak_sides
+        idle = idle_points(len(pts), mode)
         painter.save()
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        poly = QPolygonF(pts)
-        for color, style in ((with_alpha(THEME.mark_shadow, 160), Qt.PenStyle.SolidLine), (QColor(THEME.mark_photo), Qt.PenStyle.DashLine)):
-            pen = QPen(color, 1, style)
-            pen.setCosmetic(True)
-            painter.setPen(pen)
-            painter.drawPolygon(poly)
+        for side, used in zip(sides(pts), used_sides(mode)):
+            line = QPolygonF(side)
+            for token, alpha, style in ((THEME.mark_shadow, 160, Qt.PenStyle.SolidLine), (THEME.mark_photo, 255, Qt.PenStyle.DashLine)):
+                pen = QPen(with_alpha(token, alpha if used else alpha // 3), 1, style)
+                pen.setCosmetic(True)
+                painter.setPen(pen)
+                painter.drawPolyline(line)
         pen = QPen(QColor(THEME.mark_photo), 1.5)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(with_alpha(THEME.mark_shadow, 170))
         for i, p in enumerate(pts):
+            if i in idle:
+                continue
             if i in corners:
                 painter.drawRect(QRectF(p.x() - 5, p.y() - 5, 10, 10))
             else:

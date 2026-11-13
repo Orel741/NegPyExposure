@@ -434,6 +434,7 @@ Removes a light leak: a red, orange or magenta glow that light through a camera 
 
 *   **Measure Leak**: shows the whole scan with a frame of points. Drag the points onto clear film: the strip between the perforations and the picture, and the gap between two frames. A corner moves the points of its two sides with it. Keep each point off the perforations and the edge print. The × removes the frame and the correction.
 *   **Apply Light Leak** (the bulb): turns the correction on and off. It starts off, and moving the points does not change it. Place the points on the plain scan, then turn it on.
+*   **Sides**: which sides of the frame read the leak. **All** (default) uses the four sides. **Top/Bottom** uses only the top and bottom sides, for a leak that runs down the whole frame. **Left/Right** uses only the left and right sides, for a leak that runs across it. Use a pair when the other sides miss the leak and the middle keeps some of it. The unused sides show faint.
 *   **Strength**: how much of the measured leak comes out. 1 takes out what was measured.
 
 The measuring frame follows the crop. Crop the photo first, then place the points. To use it on a whole roll, click **Apply to Frames** in the card header: each photo puts the measuring frame around its own crop and measures its own leak. Adjust the points on a photo where they miss the clear film.

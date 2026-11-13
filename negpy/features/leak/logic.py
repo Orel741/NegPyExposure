@@ -2,7 +2,7 @@
 
 A leak adds light to the film. The clear film around the picture holds no image, so its density
 above the clear base is the leak alone. Each side of the measuring frame is read as a profile, the
-four profiles fill the frame as a Coons patch, and the leak comes out as exposure (`negpy_core.leak_correct`).
+four profiles fill the frame as a Coons patch (or one pair of opposite sides is spread across it), and the leak comes out as exposure (`negpy_core.leak_correct`).
 The frame is stored in the crop's space and mapped back through the geometry onto the source.
 """
 
@@ -14,7 +14,7 @@ import numpy as np
 
 from negpy.domain.types import ImageBuffer
 from negpy.features.geometry.logic import map_coords_to_geometry
-from negpy.features.leak.models import LEAK_SIDE_POINTS, LeakConfig
+from negpy.features.leak.models import LEAK_SIDE_POINTS, LEAK_SIDES_ALL, LEAK_SIDES_LEFT_RIGHT, LEAK_SIDES_TOP_BOTTOM, LeakConfig
 
 # Film contrast that turns a density step into exposure: a color negative's slope.
 LEAK_GAMMA = 0.6
@@ -57,7 +57,11 @@ def leak_token(settings: Any) -> str:
     leak = settings.leak
     if not leak_active(leak):
         return ""
-    raw = repr((leak.leak_frame, leak.leak_anchor, round(leak.leak_strength, 6), _geometry_key(settings.geometry))).encode()
+    raw = repr((leak.leak_frame, leak.leak_anchor, round(leak.leak_strength, 6), _geometry_key(settings.geometry)))
+    # Appended only for a pair of sides, so a four-side correction keeps its cached renders.
+    if leak.leak_sides != LEAK_SIDES_ALL:
+        raw += leak.leak_sides
+    raw = raw.encode()
     return "|leak:" + hashlib.blake2b(raw, digest_size=8).hexdigest()
 
 
@@ -142,6 +146,20 @@ def sides(points: Sequence[Point]) -> Tuple[List[Point], List[Point], List[Point
     return top, bottom, left, right
 
 
+def idle_points(n_points: int, mode: str) -> frozenset:
+    """Indices of the points between corners on the sides that do not read the leak for *mode*."""
+    if n_points < 4 or n_points % 4:
+        return frozenset()
+    step = n_points // 4
+    # Loop order is top, right, bottom, left; used_sides gives (top, bottom, left, right).
+    top, bottom, left, right = used_sides(mode)
+    idle = set()
+    for k, used in enumerate((top, right, bottom, left)):
+        if not used:
+            idle.update(range(k * step + 1, (k + 1) * step))
+    return frozenset(idle)
+
+
 def _arc_positions(poly: Sequence[Point], n: int, size: Tuple[int, int]) -> Tuple[np.ndarray, np.ndarray]:
     """*n* points evenly spaced by length along *poly* (pixel lengths), and their 0-1 positions."""
     w, h = size
@@ -203,15 +221,28 @@ def _inverse_bilinear(x: np.ndarray, y: np.ndarray, quad: np.ndarray) -> Tuple[n
     return u, v
 
 
-def measure(img: np.ndarray, points: Sequence[Point], strength: float) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+def used_sides(mode: str) -> Tuple[bool, bool, bool, bool]:
+    """Whether (top, bottom, left, right) read the leak for the Sides choice *mode*."""
+    if mode == LEAK_SIDES_TOP_BOTTOM:
+        return True, True, False, False
+    if mode == LEAK_SIDES_LEFT_RIGHT:
+        return False, False, True, True
+    return True, True, True, True
+
+
+def measure(
+    img: np.ndarray, points: Sequence[Point], strength: float, mode: str = LEAK_SIDES_ALL
+) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """(base transmittance per channel, leak map on a small grid, side densities) for the frame
     *points* in source-normalized coords, or None for a frame that is not a loop."""
     if len(points) < 4 or len(points) % 4 or strength <= 0.0:
         return None
     top, bottom, left, right = sides(points)
     profiles = [side_densities(img, poly) for poly in (top, bottom, left, right)]
-    # A leak only adds density, so the thinnest reading of each channel is the clear base.
-    d_ref = np.min(np.concatenate([d for d, _ in profiles]), axis=0)
+    use = used_sides(mode)
+    # A leak only adds density, so the thinnest reading of each channel is the clear base. An unused
+    # side can sit off the film, on bare light, so it never sets the base.
+    d_ref = np.min(np.concatenate([d for (d, _), on in zip(profiles, use) if on]), axis=0)
     leaks = [(np.power(10.0, (d - d_ref) / LEAK_GAMMA) - 1.0) * strength for d, _ in profiles]
     (lt, st), (lb, sb), (ll, sl), (lr, sr) = [(lk, s) for lk, (_, s) in zip(leaks, profiles)]
 
@@ -226,17 +257,22 @@ def measure(img: np.ndarray, points: Sequence[Point], strength: float) -> Option
     def along(s: np.ndarray, values: np.ndarray, t: np.ndarray) -> np.ndarray:
         return np.stack([np.interp(t, s, values[:, c]) for c in range(3)], axis=-1)
 
-    top_u, bottom_u, left_v, right_v = along(st, lt, u), along(sb, lb, u), along(sl, ll, v), along(sr, lr, v)
-    c00, c10 = (lt[0] + ll[0]) / 2, (lt[-1] + lr[0]) / 2
-    c01, c11 = (lb[0] + ll[-1]) / 2, (lb[-1] + lr[-1]) / 2
     u3, v3 = u[..., None], v[..., None]
-    patch = (
-        (1 - v3) * top_u
-        + v3 * bottom_u
-        + (1 - u3) * left_v
-        + u3 * right_v
-        - ((1 - u3) * (1 - v3) * c00 + u3 * (1 - v3) * c10 + (1 - u3) * v3 * c01 + u3 * v3 * c11)
-    )
+    if mode == LEAK_SIDES_TOP_BOTTOM:
+        patch = (1 - v3) * along(st, lt, u) + v3 * along(sb, lb, u)
+    elif mode == LEAK_SIDES_LEFT_RIGHT:
+        patch = (1 - u3) * along(sl, ll, v) + u3 * along(sr, lr, v)
+    else:
+        top_u, bottom_u, left_v, right_v = along(st, lt, u), along(sb, lb, u), along(sl, ll, v), along(sr, lr, v)
+        c00, c10 = (lt[0] + ll[0]) / 2, (lt[-1] + lr[0]) / 2
+        c01, c11 = (lb[0] + ll[-1]) / 2, (lb[-1] + lr[-1]) / 2
+        patch = (
+            (1 - v3) * top_u
+            + v3 * bottom_u
+            + (1 - u3) * left_v
+            + u3 * right_v
+            - ((1 - u3) * (1 - v3) * c00 + u3 * (1 - v3) * c10 + (1 - u3) * v3 * c01 + u3 * v3 * c11)
+        )
     t_ref = np.power(10.0, -d_ref)
     return t_ref, np.maximum(patch, 0.0).astype(np.float32), np.stack([d for d, _ in profiles])
 
@@ -247,7 +283,7 @@ def apply_leak(image: ImageBuffer, settings: Any) -> ImageBuffer:
     if not leak_active(leak):
         return image
     frame = anchored_frame(leak, settings.geometry.crop_rect)
-    found = measure(image, source_points(frame, settings.geometry, image.shape[:2]), leak.leak_strength)
+    found = measure(image, source_points(frame, settings.geometry, image.shape[:2]), leak.leak_strength, leak.leak_sides)
     if found is None:
         return image
     t_ref, grid, _ = found

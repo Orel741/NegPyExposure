@@ -14,11 +14,19 @@ from negpy.features.leak.logic import (
     apply_leak,
     corner_indices,
     default_points,
+    idle_points,
     leak_token,
     sides,
     source_points,
 )
-from negpy.features.leak.models import LEAK_SIDE_POINTS, LeakConfig
+from negpy.features.leak.models import (
+    LEAK_SIDE_POINTS,
+    LEAK_SIDES,
+    LEAK_SIDES_ALL,
+    LEAK_SIDES_LEFT_RIGHT,
+    LEAK_SIDES_TOP_BOTTOM,
+    LeakConfig,
+)
 
 _BASE = np.array([0.5, 0.3, 0.08], dtype=np.float32)
 _FRAME = (0.05, 0.05, 0.95, 0.95)
@@ -167,3 +175,77 @@ def test_moving_the_frame_keeps_the_correction_off():
     ctrl.set_leak_frame(default_points((0.06, 0.06, 0.94, 0.94)))
     assert applied[-1].leak.leak_apply is False
     assert applied[-1].leak.leak_anchor == (0.1, 0.1, 0.9, 0.9)
+
+
+def _band_scan(across: bool = False) -> tuple[np.ndarray, np.ndarray]:
+    """(clean, leaked): a leak that runs the frame's height over its left part (its width over the
+    top part with *across*) and misses the film gap that the other pair of sides sits on."""
+    h, w = 120, 180
+    leak = np.zeros((h, w))
+    leak[:, :140] = 1.0
+    leak[15:105, :15] = 0.0
+    if across:
+        leak = leak.T
+    leak = leak[..., None] * np.array([1.5, 0.1, 1.2])
+    clean = np.broadcast_to(_BASE, leak.shape).astype(np.float32)
+    leaked = (_BASE * (1.0 + leak) ** (-LEAK_GAMMA)).astype(np.float32)
+    return clean, leaked
+
+
+def _center_error(out: np.ndarray, clean: np.ndarray) -> float:
+    h, w = out.shape[:2]
+    win = (slice(h * 3 // 8, h * 5 // 8), slice(w * 3 // 8, w * 5 // 8))
+    return float(np.abs(np.log10(out[win] / clean[win])).max())
+
+
+@pytest.mark.parametrize("mode, across", [(LEAK_SIDES_TOP_BOTTOM, False), (LEAK_SIDES_LEFT_RIGHT, True)])
+def test_a_pair_of_sides_takes_out_a_leak_the_other_sides_miss(mode, across):
+    clean, leaked = _band_scan(across=across)
+    all_sides = _center_error(apply_leak(leaked, _on()), clean)
+    pair = _center_error(apply_leak(leaked, _on(leak_sides=mode)), clean)
+    # Four sides average in the clean gap and leave part of the leak in the middle.
+    assert all_sides > 0.05
+    assert pair < 0.01
+
+
+def test_an_unused_side_on_bare_light_does_not_set_the_base():
+    clean, leaked = _band_scan()
+    lit = leaked.copy()
+    lit[15:105, :15] = 1.0  # the left side sits off the film
+    a = apply_leak(leaked, _on(leak_sides=LEAK_SIDES_TOP_BOTTOM))
+    b = apply_leak(lit, _on(leak_sides=LEAK_SIDES_TOP_BOTTOM))
+    assert np.abs(np.log10(a[:, 30:150] / b[:, 30:150])).max() < 1e-6
+    assert _center_error(a, clean) < 0.01
+
+
+def test_sides_change_the_hash_and_round_trip():
+    assert leak_token(_on()) == leak_token(_on(leak_sides=LEAK_SIDES_ALL))
+    tokens = {leak_token(_on(leak_sides=m)) for m in LEAK_SIDES}
+    assert len(tokens) == 3
+    conf = _on(leak_sides=LEAK_SIDES_LEFT_RIGHT)
+    assert WorkspaceConfig.from_flat_dict(conf.to_dict()).leak.leak_sides == LEAK_SIDES_LEFT_RIGHT
+    assert LeakConfig(leak_sides="diagonal").leak_sides == LEAK_SIDES_ALL
+
+
+def test_idle_points_are_the_middle_points_of_the_unused_sides():
+    n = 4 * (LEAK_SIDE_POINTS + 1)
+    tl, tr, br, bl = corner_indices(n)
+    assert idle_points(n, LEAK_SIDES_ALL) == frozenset()
+    assert idle_points(n, LEAK_SIDES_TOP_BOTTOM) == frozenset(range(tr + 1, br)) | frozenset(range(bl + 1, n))
+    assert idle_points(n, LEAK_SIDES_LEFT_RIGHT) == frozenset(range(tl + 1, tr)) | frozenset(range(br + 1, bl))
+
+
+def test_the_sides_choice_shows_the_saved_sides_and_sets_new_ones(qapp):
+    from unittest.mock import MagicMock
+
+    from negpy.desktop.session import AppState
+    from negpy.desktop.view.sidebar.leak import LeakSidebar
+
+    controller = MagicMock()
+    controller.state = AppState()
+    controller.state.config = _on(leak_sides=LEAK_SIDES_TOP_BOTTOM)
+    card = LeakSidebar(controller)
+    assert card.sides_btn.currentData() == LEAK_SIDES_TOP_BOTTOM
+    assert card.sides_btn.isEnabled()
+    card.sides_btn.setCurrentIndex(card.sides_btn.findData(LEAK_SIDES_LEFT_RIGHT))
+    controller.set_leak.assert_called_with(leak_sides=LEAK_SIDES_LEFT_RIGHT)
