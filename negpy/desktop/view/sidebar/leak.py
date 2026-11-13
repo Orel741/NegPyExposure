@@ -4,8 +4,10 @@ from PyQt6.QtWidgets import QHBoxLayout
 
 from negpy.desktop.session import ToolMode
 from negpy.desktop.view.sidebar.base import BaseSidebar
-from negpy.desktop.view.styles.templates import ICON_BUTTON_WIDTH, clearable_tool_toggle, hint_label
+from negpy.desktop.view.styles.templates import ICON_BUTTON_WIDTH, clearable_tool_toggle, field_row, hint_label
+from negpy.desktop.view.widgets.segmented_choice import SegmentedChoice
 from negpy.desktop.view.widgets.sliders import CompactSlider
+from negpy.features.leak.models import LEAK_SIDES
 
 
 class LeakSidebar(BaseSidebar):
@@ -32,6 +34,24 @@ class LeakSidebar(BaseSidebar):
         row.addWidget(self.enable_btn)
         self.layout.addLayout(row)
 
+        self.sides_btn = SegmentedChoice(
+            (
+                ("mdi6.vector-square", tr("All")),
+                ("fa5s.arrows-alt-v", tr("Top/Bottom")),
+                ("fa5s.arrows-alt-h", tr("Left/Right")),
+            ),
+            tr("Which sides of the measuring frame read the leak."),
+            data=LEAK_SIDES,
+        )
+        self.sides_btn.set_choice_tooltip(0, tr("All: the four sides read the leak, for a leak that reaches the frame from several sides."))
+        self.sides_btn.set_choice_tooltip(
+            1, tr("Top/Bottom: only the top and bottom sides read the leak, for a leak that runs down the frame.")
+        )
+        self.sides_btn.set_choice_tooltip(
+            2, tr("Left/Right: only the left and right sides read the leak, for a leak that runs across the frame.")
+        )
+        self.layout.addLayout(field_row(tr("Sides"), self.sides_btn))
+
         self.strength_slider = CompactSlider(tr("Strength"), 0.0, 1.5, conf.leak_strength, has_neutral=False)
         self.strength_slider.setToolTip(tr("How much of the measured leak comes out of the frame."))
         self.layout.addWidget(self.strength_slider)
@@ -43,6 +63,7 @@ class LeakSidebar(BaseSidebar):
         self.frame_btn.toggled.connect(lambda on: self.controller.set_active_tool(ToolMode.LEAK_FRAME if on else ToolMode.NONE))
         self.frame_btn.clear_btn.clicked.connect(self.controller.clear_leak)
         self.enable_btn.toggled.connect(self.controller.set_leak_enabled)
+        self.sides_btn.currentChanged.connect(lambda _i: self.controller.set_leak(leak_sides=self.sides_btn.currentData()))
         self.strength_slider.valueChanged.connect(
             lambda v: self.controller.set_leak(persist=False, readback_metrics=False, leak_strength=v)
         )
@@ -53,16 +74,19 @@ class LeakSidebar(BaseSidebar):
     def sync_ui(self) -> None:
         conf = self.state.config.leak
         has_frame = bool(conf.leak_frame)
-        for w in (self.frame_btn, self.enable_btn, self.strength_slider):
+        widgets = (self.frame_btn, self.enable_btn, self.sides_btn, self.strength_slider)
+        for w in widgets:
             w.blockSignals(True)
         try:
             self.frame_btn.setChecked(self.state.active_tool == ToolMode.LEAK_FRAME)
             self.frame_btn.clear_btn.setVisible(has_frame)
             self.enable_btn.setChecked(conf.leak_apply and has_frame)
             self.enable_btn.setEnabled(has_frame)
+            self.sides_btn.setCurrentIndex(max(0, self.sides_btn.findData(conf.leak_sides)))
+            self.sides_btn.setEnabled(has_frame)
             self.strength_slider.setValue(conf.leak_strength)
             self.strength_slider.setEnabled(has_frame)
             self.hint.setVisible(not (has_frame and conf.leak_apply))
         finally:
-            for w in (self.frame_btn, self.enable_btn, self.strength_slider):
+            for w in widgets:
                 w.blockSignals(False)

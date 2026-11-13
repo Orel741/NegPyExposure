@@ -7091,6 +7091,7 @@ class AppController(QObject):
             leak_anchor=defaults.leak_anchor,
             leak_apply=defaults.leak_apply,
             leak_strength=defaults.leak_strength,
+            leak_sides=defaults.leak_sides,
         )
         self.tool_sync_requested.emit()
 

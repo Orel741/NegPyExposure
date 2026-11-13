@@ -1411,7 +1411,15 @@ class ControlsPanel(QWidget):
         )
         self.retouch_section.set_modified(retouch_count)
         leak = cfg.leak
-        self.leak_section.set_modified(sum([bool(leak.leak_frame) and leak.leak_apply, leak.leak_strength != _DEFAULT_LEAK.leak_strength]))
+        self.leak_section.set_modified(
+            sum(
+                [
+                    bool(leak.leak_frame) and leak.leak_apply,
+                    leak.leak_strength != _DEFAULT_LEAK.leak_strength,
+                    leak.leak_sides != _DEFAULT_LEAK.leak_sides,
+                ]
+            )
+        )
         # Presets and the two Scan sections stay out: they own no WorkspaceConfig fields.
         self.sensor_section.set_modified(sensor_count)
         self.fade_section.set_modified(fade_count)

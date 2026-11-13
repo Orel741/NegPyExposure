@@ -336,6 +336,7 @@ CATALOG: list[tuple[str, tuple[SettingRow, ...]]] = [
     (mark("Light Leak"), (
         _row(mark("Light Leak"), "leak", "leak_apply"),
         _row(mark("Measuring Frame"), "leak", "leak_frame", "leak_anchor", fmt=_fmt_leak_frame),
+        _row(mark("Sides"), "leak", "leak_sides"),
         _row(mark("Strength"), "leak", "leak_strength"),
     )),
     (mark("Metadata"), (
