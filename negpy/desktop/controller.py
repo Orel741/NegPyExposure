@@ -3861,7 +3861,8 @@ class AppController(QObject):
         logs = np.asarray([log_from_val(tuple(px), bounds) for px in patch], dtype=np.float64)
         picked = tuple(float(v) for v in np.median(logs, axis=0))
         roll_id = self.state.active_roll_id
-        frame_only = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier)
+        # Metering set to Frame keeps the pick on this frame, like a Shift-click.
+        frame_only = bool(QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier) or self.roll_card_locked("process")
         if field == "manual_dmin" and roll_id and not frame_only and rolls.set_roll_dmin(self.session.repo, roll_id, picked):
             # The roll's Dmin serves this frame too, so the frame's own pick steps aside.
             self._set_roll_dmin(picked)

@@ -136,6 +136,29 @@ def test_a_pick_in_an_open_roll_sets_the_rolls_dmin_and_shift_sets_the_frames(mo
     assert stored["dmin"] is None and ctrl.state.config.process.roll_dmin is None
 
 
+def test_a_pick_with_metering_set_to_frame_sets_only_the_frames_dmin(monkeypatch):
+    from unittest.mock import MagicMock
+
+    from PyQt6.QtCore import Qt
+
+    from negpy.desktop import controller as controller_module
+
+    ctrl = _controller()
+    ctrl.state.active_roll_id = "roll-1"
+    ctrl.state.current_file_hash = "a"
+    ctrl.session = MagicMock()
+    ctrl.refresh_thumbnails_for = MagicMock()
+    set_roll_dmin = MagicMock(return_value=True)
+    monkeypatch.setattr(controller_module.rolls, "set_roll_dmin", set_roll_dmin)
+    monkeypatch.setattr(controller_module.rolls, "frame_override_cards", lambda _repo, _rid, _hash: {"process"})
+    monkeypatch.setattr(controller_module.QApplication, "keyboardModifiers", MagicMock(return_value=Qt.KeyboardModifier.NoModifier))
+
+    _click(ctrl, "manual_dmin", (0.9, 0.8, 0.7))
+    assert ctrl.state.config.process.manual_dmin == pytest.approx((-0.1, -0.2, -0.3))
+    set_roll_dmin.assert_not_called()
+    ctrl.refresh_thumbnails_for.assert_not_called()
+
+
 def test_clear_forgets_only_its_own_end():
     ctrl = _controller()
     _click(ctrl, "manual_dmin", (0.9, 0.8, 0.7))
