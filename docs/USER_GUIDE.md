@@ -569,7 +569,7 @@ To turn a negative into a positive, NegPy measures its darkest and brightest par
 *   **Lock Bounds**: keeps this frame's black and white points, even when the crop or Roll Analysis changes.
 *   **Luma Range Clip** (fold): how tightly black and white are set. Positive gives more contrast, for dense or foggy negatives. Negative keeps more shadow and highlight detail.
 *   **Color Clip** (fold): how tightly the color balance is set.
-*   **Dmin** / **Dmax** (Pick by Hand fold): set the black and white points by hand. Click **Dmin**, then the clear film base, to set the black point and color balance of the whole open roll. Shift-click sets it for this frame only. Dmin wins over the roll average. Click **Dmax**, then the brightest highlight, to set the white point of this frame. Each **×** clears its own point.
+*   **Dmin** / **Dmax** (Pick by Hand fold): set the black and white points by hand. Click **Dmin**, then the clear film base, to set the black point and color balance of the whole open roll. Shift-click, or Metering set to Frame, sets it for this frame only. Dmin wins over the roll average. Click **Dmax**, then the brightest highlight, to set the white point of this frame. Each **×** clears its own point.
 *   **White Point** / **Black Point** (fold): move the measured white and black points. A positive white point brightens the print; a positive black point lifts the blacks. **R / G / B** moves one color only.
 
 A **slide** needs no inversion: the tone controls shape the picture directly. Auto Density and Auto Grade start off; turn them on for a faded slide. On a slide, Draw Region sets the area that Estimate, Remove Stain, Cast Removal, Auto Density and Auto Grade measure. Draw it before you click Estimate.

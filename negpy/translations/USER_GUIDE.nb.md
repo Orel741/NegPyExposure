@@ -392,7 +392,7 @@ Gir et falmet dias fargelagene tilbake. Kortet vises bare for dias.
 *   **Gråmiks**: endrer hvilke grå toner Beregn stoler på. Dra den hvis fargene ser feil ut.
 *   **Crossover**: fjerner en fargeforskyvning mellom skygger og høylys. Still den inn på et bilde med tydelige gråtoner, og klikk så **Rull** på kortet.
 
-<!-- panel:process src:2778ea07 -->
+<!-- panel:process src:4f2f0e3c -->
 ### 10.6 Lysmåling: negativ → positiv
 
 For å gjøre et negativ om til et positiv måler NegPy de mørkeste og lyseste delene (svart- og hvitpunktet) og fargen på filmen. Disse kontrollene angir hva den måler.
@@ -404,7 +404,7 @@ For å gjøre et negativ om til et positiv måler NegPy de mørkeste og lyseste 
 *   **Lås grenser**: beholder svart- og hvitpunktet for dette bildet, selv når beskjæringen eller rullanalysen endres.
 *   **Luma-områdeklipping** (fold): hvor stramt svart og hvitt settes. Positiv gir mer kontrast, for tette eller tåkete negativer. Negativ beholder flere detaljer i skygger og høylys.
 *   **Fargeklipping** (fold): hvor stramt fargebalansen settes.
-*   **Dmin** / **Dmax** (folden Velg selv): angir svart- og hvitpunktet for hånd. Klikk **Dmin**, og så den klare filmbasen, for å angi svartpunktet og fargebalansen for hele den åpne rullen. Skift-klikk angir det bare for dette bildet. Dmin går foran rullens gjennomsnitt. Klikk **Dmax**, og så det lyseste høylyset, for å angi hvitpunktet for dette bildet. Hver **×** fjerner sitt eget punkt.
+*   **Dmin** / **Dmax** (folden Velg selv): angir svart- og hvitpunktet for hånd. Klikk **Dmin**, og så den klare filmbasen, for å angi svartpunktet og fargebalansen for hele den åpne rullen. Skift-klikk, eller Lysmåling satt til Bilde, angir det bare for dette bildet. Dmin går foran rullens gjennomsnitt. Klikk **Dmax**, og så det lyseste høylyset, for å angi hvitpunktet for dette bildet. Hver **×** fjerner sitt eget punkt.
 *   **Hvitpunkt** / **Svartpunkt** (fold): flytter det målte hvit- og svartpunktet. Et positivt hvitpunkt gjør kopien lysere; et positivt svartpunkt løfter svarttonene. **R / G / B** flytter bare én farge.
 
 Et **dias** trenger ingen invertering: tonekontrollene former bildet direkte. Autotetthet og autogradering starter av; slå dem på for et falmet dias. På et dias angir Tegn område området som Beregn, Fjern flekk, Fjerning av fargestikk, Autotetthet og Autogradering måler. Tegn det før du klikker Beregn.
