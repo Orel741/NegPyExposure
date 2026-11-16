@@ -1424,6 +1424,35 @@ class TestDesktopSessionSync(unittest.TestCase):
         self.assertEqual(len(steps), 2)
         self.assertEqual(steps[1][2], expected)
 
+    def test_a_roll_reset_clears_the_rolls_picked_dmin(self):
+        from unittest.mock import patch
+
+        from negpy.services.assets import rolls
+
+        self.session.select_file(0)
+        self.session.state.active_roll_id = "roll-1"
+        with (
+            patch.object(rolls, "roll_dmin", return_value=(0.1, 0.2, 0.3)),
+            patch.object(rolls, "set_roll_dmin", return_value=True) as set_roll_dmin,
+        ):
+            self.session.reset_roll(self.session.state.uploaded_files)
+            set_roll_dmin.assert_any_call(self.mock_repo, "roll-1", None)
+            set_roll_dmin.reset_mock()
+            self.session.reset_roll_settings(scope="roll")
+            set_roll_dmin.assert_any_call(self.mock_repo, "roll-1", None)
+
+    def test_a_single_frame_reset_keeps_the_rolls_picked_dmin(self):
+        from unittest.mock import patch
+
+        from negpy.services.assets import rolls
+
+        self.session.select_file(0)
+        self.session.state.active_roll_id = "roll-1"
+        with patch.object(rolls, "set_roll_dmin", return_value=True) as set_roll_dmin:
+            self.session.reset_settings()
+            self.session.reset_roll_settings(scope="selection")
+        set_roll_dmin.assert_not_called()
+
     def test_reset_roll_does_not_touch_a_frame_outside_the_given_list(self):
         self.session.select_file(0)
         only_hash1 = [self.session.state.uploaded_files[0]]
