@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 # Bump in any change that alters the bounds a frame measures for unchanged settings. Saved
 # per-frame bounds from an older version are dropped at startup (migrations/bounds.py).
-BOUNDS_VERSION = 6
+BOUNDS_VERSION = 7
 
 # Contrast Mask blur sigma, per-cent of the analysis grid's short side. Of the grid, not of
 # the render, so preview and export mask alike. Near the Frontier HyperTone blur's spread.
@@ -1011,8 +1011,8 @@ def resolve_bounds_detailed(process, analyze_fn) -> tuple[LogNegativeBounds, Log
     if roll_luma and roll_color:
         return with_picked_dmin(process, locked), locked
     base = LogNegativeBounds(process.local_floors, process.local_ceils) if process.is_local_initialized else analyze_fn()
-    if process.manual_dmin is not None or process.manual_dmax is not None:
-        base = LogNegativeBounds(process.manual_dmax or base.floors, process.manual_dmin or base.ceils)
+    if process.manual_dmax is not None:
+        base = LogNegativeBounds(process.manual_dmax, base.ceils)
     final = mix_luma_color_bounds(locked if roll_luma else base, locked if roll_color else base)
     return with_picked_dmin(process, final), base
 
@@ -1024,9 +1024,14 @@ def picked_dmin(process) -> Optional[Tuple[float, float, float]]:
 
 def with_picked_dmin(process, bounds: LogNegativeBounds) -> LogNegativeBounds:
     """*bounds* with the picked Dmin as the thin end. It wins over a roll average, so the
-    persisted per-frame base never holds a roll's Dmin."""
+    persisted per-frame base never holds a Dmin. The pick sets the channel balance; its luma
+    never sits denser than the thin end of *bounds*, so no tone of the frame prints past black."""
     dmin = picked_dmin(process)
-    return bounds if dmin is None else LogNegativeBounds(bounds.floors, tuple(dmin))
+    if dmin is None:
+        return bounds
+    w = (LUMA_R, LUMA_G, LUMA_B)
+    lift = max(sum(w[ch] * (float(bounds.ceils[ch]) - float(dmin[ch])) for ch in range(3)), 0.0)
+    return LogNegativeBounds(bounds.floors, tuple(float(dmin[ch]) + lift for ch in range(3)))
 
 
 def luma_source_bounds(process, base: LogNegativeBounds) -> LogNegativeBounds:
