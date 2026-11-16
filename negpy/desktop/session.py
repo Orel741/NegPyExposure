@@ -2010,6 +2010,8 @@ class DesktopSessionManager(QObject):
         if self.state.selected_file_idx == -1:
             return 0
         target_indices = self._scope_indices(scope)
+        if scope == "roll":
+            self._clear_roll_dmin()
         count = 0
         changed_hashes: list[str] = []
         for idx in target_indices:
@@ -2425,6 +2427,12 @@ class DesktopSessionManager(QObject):
         self.state_changed.emit()
         self.history_changed.emit()
 
+    def _clear_roll_dmin(self) -> None:
+        """Forget the open roll's picked Dmin, so a roll-wide reset returns every frame to the measured base."""
+        roll_id = self.state.active_roll_id
+        if roll_id and rolls.roll_dmin(self.repo, roll_id) is not None:
+            rolls.set_roll_dmin(self.repo, roll_id, None)
+
     def _reset_frame(self, asset: dict) -> WorkspaceConfig:
         """Unlock *asset*'s roll cards and return what a reset writes: what a fresh frame
         in its roll gets, less the sticky look. DEFAULT_WORKSPACE_CONFIG, the scan-setup
@@ -2461,6 +2469,7 @@ class DesktopSessionManager(QObject):
         `update_config`, the rest are written straight to the DB with an external history
         step, the same split `_on_normalization_finished` uses for a roll-wide write.
         """
+        self._clear_roll_dmin()
         changed_hashes: list[str] = []
         for f_info in assets:
             new_p = self._reset_frame(f_info)
