@@ -5,7 +5,7 @@ from negpy.features.exposure.normalization import LogNegativeBounds, resolve_bou
 from negpy.features.process.models import ProcessConfig
 
 _AUTO = LogNegativeBounds((-2.0, -2.1, -2.2), (-0.3, -0.4, -0.5))
-_DMIN = (-0.1, -0.2, -0.6)
+_DMIN = (-0.1, -0.2, -0.4)
 _DMAX = (-1.8, -1.9, -2.4)
 
 
@@ -29,8 +29,19 @@ def _resolve(**kw) -> tuple:
 )
 def test_a_picked_end_replaces_that_end_of_the_analysis(picks, expected):
     final, base = _resolve(**picks)
-    assert base == expected
     assert final == expected
+    assert base == (expected[0], _AUTO.ceils)
+
+
+def test_a_dmin_denser_than_the_frame_keeps_its_balance_and_moves_to_the_frames_thin_end():
+    from negpy.domain.types import LUMA_B, LUMA_G, LUMA_R
+
+    dense = (-0.33, -0.45, -0.52)
+    final, base = _resolve(manual_dmin=dense)
+    luma = lambda c: LUMA_R * c[0] + LUMA_G * c[1] + LUMA_B * c[2]  # noqa: E731
+    assert base == _t(_AUTO)
+    assert luma(final[1]) == pytest.approx(luma(_AUTO.ceils))
+    assert np.diff(np.subtract(final[1], dense)) == pytest.approx([0.0, 0.0])
 
 
 _LOCKED = LogNegativeBounds((-1.5, -1.5, -1.5), (-0.2, -0.2, -0.2))
@@ -209,8 +220,12 @@ def test_both_engines_render_with_the_picked_bounds():
     DarkroomEngine().process(img, cfg, "pick", context=context)
 
     for engine_bounds in (gpu["log_bounds_base"], context.metrics["log_bounds_base"]):
-        floors, ceils = _t(engine_bounds)
-        assert floors == pytest.approx((-1.6, -1.7, -2.0)) and ceils == pytest.approx((-0.2, -0.3, -0.5))
+        assert _t(engine_bounds)[0] == pytest.approx((-1.6, -1.7, -2.0))
+    final = resolve_bounds_detailed(cfg.process, lambda: context.metrics["log_bounds_base"])[0]
+    lift = final.ceils[1] - (-0.3)
+    assert lift >= 0.0 and final.ceils == pytest.approx((-0.2 + lift, -0.3 + lift, -0.5 + lift))
+    for engine_bounds in (gpu["log_bounds"], context.metrics["final_bounds"]):
+        assert np.ravel(_t(engine_bounds)) == pytest.approx(np.ravel(_t(final)), abs=1e-4)
 
 
 def test_the_readout_colors_each_channel():

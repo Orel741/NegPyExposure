@@ -359,9 +359,9 @@ EXPOSURE_CONSTANTS: Dict[str, Any] = {
 TONE_PROFILES: Dict[str, Tuple[float, float, float, float]] = {
     "standard": (float(EXPOSURE_CONSTANTS["scan_black_level"]), float(EXPOSURE_CONSTANTS["scan_white_level"]), 0.0, 1.0),
     "soft": (0.0, 1.10, 0.1, 0.85),
-    "hard": (-0.08, 1.20, 0.0, 1.2),
+    "hard": (-0.02, 1.20, 0.0, 1.2),
     "flat": (0.02, 1.0, 0.15, 0.8),
-    "deep": (-0.10, 1.15, -0.2, 1.1),
+    "deep": (-0.03, 1.15, -0.2, 1.1),
 }
 
 

@@ -141,6 +141,13 @@
    "sharpen_radius": "1.0",
    "skin_protection": "0.5"
   },
+  "leak": {
+   "leak_anchor": "[]",
+   "leak_apply": "false",
+   "leak_frame": "[]",
+   "leak_sides": "\"all\"",
+   "leak_strength": "1.0"
+  },
   "local": {
    "masks": "[]"
   },
@@ -236,5 +243,5 @@
    "vanadium_strength": "0.0"
   }
  },
- "render_version": 39
+ "render_version": 40
 }
